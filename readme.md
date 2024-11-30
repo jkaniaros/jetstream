@@ -7,6 +7,9 @@ Deshalb eine Applikation, die die Winddaten des DWDs abruft, um damit später ei
 
 Winddaten werden durch DWD stündlich für ca. 300 Städte generiert, diese können regelmäßig abgerufen werden.
 
+[Link für DWD File Download](https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/wind/recent/)
+
+
 ## Architektur
 1. Python Web Scraper
 2. Python Streaming Service

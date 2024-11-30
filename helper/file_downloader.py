@@ -4,6 +4,10 @@ from urllib.parse import urljoin
 from html.parser import HTMLParser
 
 class HtmlParser(HTMLParser):
+    """
+    HTML Parser that handles link entries in the HTML.
+    Saves the URLs in the field `file_links`
+    """
     def __init__(self, base_url):
         super().__init__()
         self.base_url = base_url
@@ -18,8 +22,17 @@ class HtmlParser(HTMLParser):
 
 
 def download_file(url, folder):
+    """
+    Function to download a file from a specified URL and save it to a folder
+    
+    Parameters:
+    url (str): The URL of the file to download.
+    folder (str): The folder where the file should be saved.
+    """
+
     r = requests.get(url, timeout=10)
     if r.status_code == 200:
+        # Get filename from URL
         filename = os.path.join(folder, url.split("/")[-1])
         print(f"Filename {filename}")
         
@@ -30,11 +43,21 @@ def download_file(url, folder):
         print(f"Failed to download {filename}")
         
 def download_all_files(url, folder):
+    """
+    Function to download all file found in a specified URL and save them to a folder
+    
+    Parameters:
+    url (str): The URL of the files to download. The files should be found as HTML links.
+    folder (str): The folder where the files should be saved.
+    """
+
+    # Create download folder if it doesn't exist
     if not os.path.exists(folder):
         os.makedirs(folder)
         
     r = requests.get(url, timeout=10)
     if r.status_code == 200:
+        # Call the HTML Parser from above that scrapes the HTML links
         parser = HtmlParser(url)
         parser.feed(r.text)
         
