@@ -1,0 +1,7 @@
+ipython
+pandas
+pyarrow
+numpy
+pyspark
+requests
+kafka

@@ -18,5 +18,9 @@ Winddaten werden durch DWD stündlich für ca. 300 Städte generiert, diese kön
 5. MariaDB als zentrale Ablage für Serving Layer
 
 ## Entwurf
+1. Python venv erstellen: `python -m venv .venv`
+2. venv aktivieren: `sh .venv/bin/activate`
+3. Abhängigkeiten laden: `python -m pip install -r requirements.txt`
+4. `docker-compose up -d`
 
 ## Screencast
