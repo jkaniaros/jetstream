@@ -1,0 +1,5 @@
+# ipython
+# pandas
+# pyspark
+requests
+kafka-python

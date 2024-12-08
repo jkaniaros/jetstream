@@ -1,66 +1,61 @@
 services:
   broker:
-    image: apache/kafka:latest
-    container_name: kafka
+    image: apache/kafka
+    container_name: broker
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://broker:9092,CONTROLLER://broker:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
-  
-  spark-master:
-    container_name: spark-master
-    build: .
-    image: spark-image
-    entrypoint: ['./entrypoint.sh', 'master']
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
-      interval: 5s
-      timeout: 3s
-      retries: 3
     volumes:
-      - ./book_data:/opt/spark/data
-      - ./spark_apps:/opt/spark/apps
-      - spark-logs:/opt/spark/spark-events
-    env_file:
-      - .env.spark
+      - ../data/kafka-data:/var/lib/kafka/data
     ports:
-      - '8080:8080'
-      - '7077:7077'
+      - 9092:9092
 
-  spark-history-server:
-    container_name: spark-history
-    image: spark-image
-    entrypoint: ['./entrypoint.sh', 'history']
+  # spark-master:
+  #   image: bitnami/spark
+  #   environment:
+  #     SPARK_MODE: master
+  #   ports:
+  #     - "7077:7077"
+  #     - "8080:8080"
+  #   volumes:
+  #     - ../data/spark-data-m:/opt/spark/work
+
+  # spark-worker:
+  #   image: bitnami/spark
+  #   environment:
+  #     SPARK_MODE: worker
+  #     SPARK_MASTER_URL: spark://spark-master:7077
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8081:8081"
+  #   volumes:
+  #     - ../data/spark-data-w:/opt/spark/work
+
+  # mariadb:
+  #   image: mariadb
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: example
+  #     MYSQL_DATABASE: exampledb
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - ../data/mariadb-data:/var/lib/mysql
+
+  generator:
+    build:
+      context: ./app
     depends_on:
-      - spark-master
-    env_file:
-      - .env.spark
-    volumes:
-      - spark-logs:/opt/spark/spark-events
-    ports:
-      - '18080:18080'
-
-  spark-worker:
-    container_name: spark-worker
-    image: spark-image
-    entrypoint: ['./entrypoint.sh', 'worker']
-    depends_on:
-      - spark-master
-    env_file:
-      - .env.spark
-    volumes:
-      - ./book_data:/opt/spark/data
-      - ./spark_apps:/opt/spark/apps
-      - spark-logs:/opt/spark/spark-events
-
-volumes:
-  spark-logs:
+      - broker
+    environment:
+      KAFKA_BROKER: broker:9092
