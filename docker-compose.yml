@@ -16,7 +16,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
     volumes:
-      - ../data/kafka-data:/var/lib/kafka/data
+      - ./data/kafka-data:/var/lib/kafka/data
     ports:
       - 9092:9092
 
@@ -28,7 +28,7 @@ services:
   #     - "7077:7077"
   #     - "8080:8080"
   #   volumes:
-  #     - ../data/spark-data-m:/opt/spark/work
+  #     - ./data/spark-data-m:/opt/spark/work
 
   # spark-worker:
   #   image: bitnami/spark
@@ -40,7 +40,7 @@ services:
   #   ports:
   #     - "8081:8081"
   #   volumes:
-  #     - ../data/spark-data-w:/opt/spark/work
+  #     - ./data/spark-data-w:/opt/spark/work
 
   # mariadb:
   #   image: mariadb
@@ -50,7 +50,7 @@ services:
   #   ports:
   #     - "3306:3306"
   #   volumes:
-  #     - ../data/mariadb-data:/var/lib/mysql
+  #     - ./data/mariadb-data:/var/lib/mysql
 
   generator:
     build:
@@ -59,3 +59,12 @@ services:
       - broker
     environment:
       KAFKA_BROKER: broker:9092
+
+  consumer:
+    build:
+      context: ./consumer
+    depends_on:
+      - broker
+    environment:
+      KAFKA_BROKER: broker:9092
+      
