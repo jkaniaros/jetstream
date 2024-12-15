@@ -1,34 +1,39 @@
-from kafka import KafkaConsumer, KafkaClient
+from kafka import KafkaConsumer, KafkaClient, TopicPartition
 from kafka.errors import NoBrokersAvailable
 from concurrent.futures import ThreadPoolExecutor
 import os
 import time
 
+KAFKA_TOPIC = "jetstream"
+
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER")
 print(f"Kafka Broker: {KAFKA_BROKER}")
 
-WAIT_SEC = 1
-
-def consume_messages(topic):
+def consume_messages(topic: str, partition: int):
     """
-    Connect to a specified Kafka topic and consume messages from it
+    Connect to a specified Kafka topic and consume messages from the specified partition
     
     Parameters:
     topic (str): The Kafka topic to consume messages from.
+    partition (int): The Kafka topic partition to consume messages from.
     """
-    print(f"Consuming topic {topic}")
+    
+    print(f"Consuming topic '{topic}' partition {partition}")
     consumer = KafkaConsumer(
-        topic,
         bootstrap_servers=KAFKA_BROKER,
-        auto_offset_reset="earliest"  # Start from the earliest message
+        group_id=topic,
+        auto_offset_reset="earliest" # Start from the earliest message
     )
+    # Assign the partition to the consumer
+    p = TopicPartition(topic, partition)
+    consumer.assign([p])
     
     try:
         for message in consumer:
-            print(f"Received message from {topic}: {message.value}")
+            print(f"Received message from topic '{topic}' partition {partition}: '{message.value}'")
             # Process the message here
     except Exception as e:
-        print(f"Error consuming messages from {topic}: {e}")
+        print(f"Error consuming messages from '{topic}' partition {partition}: {e}")
     finally:
         consumer.close()
     
@@ -37,6 +42,7 @@ def run():
     """
     Entrypoint of the consumer. Reads all topics within the Kafka broker
     """
+    
     print("Run")
     topics = []
     try:
@@ -46,38 +52,35 @@ def run():
         topics = kafka_client.cluster.topics()
         
         print(f"Topics: {list(topics)}")
-    except NoBrokersAvailable:
-        print(f"No Kafka broker available... Retrying in {WAIT_SEC} secons")
+    except Exception as e:
+        print(e)
+        return
 
     # Create a ThreadPoolExecutor to process each topic in parallel
-    if topics:
-        # Use 75% of the available CPU cores
-        with ThreadPoolExecutor(max_workers=int(os.cpu_count()*0.75)) as executor:
-            # Create a consume_messages task for each topic and submit it to the executor
-            # Each topic is processed concurrently in its own thread by the consume_messages function
-            futures = {executor.submit(consume_messages, topic): topic for topic in topics}
-
-            # Await every future
-            for f in futures:
-                try:
-                    f.result()
-                except Exception as e:
-                    print(f"Error in thread for topic {futures[future]}: {e}")
-    else:
+    if KAFKA_TOPIC not in topics:
         print(f"{time.ctime()} No topics")
-        
-        time.sleep(WAIT_SEC)
-        
-        # Double the waiting time up to 512 sec (8.5 min)
-        if WAIT_SEC <= 256:
-            WAIT_SEC *= 2
+        return
+    
+    # Get all partitions for the topic
+    topic_partitions = kafka_client.cluster.partitions_for_topic(KAFKA_TOPIC)
+    print(f"Topic partitions {topic_partitions}")
+    
+    # Each topic partition is processed concurrently in its own thread
+    with ThreadPoolExecutor(max_workers=len(topic_partitions)) as executor:
+        # Create a consume_messages task for each topic and submit it to the executor
+        futures = {executor.submit(consume_messages, KAFKA_TOPIC, partition): partition for partition in topic_partitions}
+
+        # Await every future
+        for f in futures:
+            try:
+                f.result()
+            except Exception as e:
+                print(f"Error in thread for topic {futures[future]}: {e}")
 
 if __name__ == "__main__":
     print("Starting...")
     
-    try:
-        while True:
-            run()
-
-    except KeyboardInterrupt:
-        print("Exit")
+    while True:
+        run()
+        print("Run finished. Waiting 10 seconds")
+        time.sleep(10)

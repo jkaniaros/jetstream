@@ -67,4 +67,5 @@ services:
       - broker
     environment:
       KAFKA_BROKER: broker:9092
+    restart: on-failure
       

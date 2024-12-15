@@ -21,7 +21,7 @@ class HtmlParser(HTMLParser):
                     self.file_links.append(file_url)
 
 
-def download_file(url, folder):
+def download_file(url: str, folder: str):
     """
     Function to download a file from a specified URL and save it to a folder
     
@@ -42,7 +42,7 @@ def download_file(url, folder):
     else:
         print(f"Failed to download {filename}")
         
-def download_all_files(url, folder):
+def download_all_files(url: str, folder: str):
     """
     Function to download all file found in a specified URL and save them to a folder
     
