@@ -13,7 +13,8 @@ DOWNLOAD_FOLDER = os.path.join("tmp", "input")
 # File in the weather station zip file that contains the wind data. The rest only has metadata
 EXTRACT_REGEX = r"^produkt_ff_stunde_\w*\.txt$"
 STAGED_FOLDER = os.path.join("tmp", "staged")
-TOPIC_REGEX = r"_(\d+)\.txt$"
+KAFKA_TOPIC = "jetstream"
+TOPIC_KEY_REGEX = r"_(\d+)\.txt$"
 
 DESCRIPTION_FILE = os.path.join(DOWNLOAD_FOLDER, "FF_Stundenwerte_Beschreibung_Stationen.txt")
 
@@ -33,7 +34,7 @@ def run():
     if os.path.exists(DESCRIPTION_FILE):
         shutil.copy2(DESCRIPTION_FILE, STAGED_FOLDER)
     
-    publish_staged(STAGED_FOLDER, KAFKA_BROKER, TOPIC_REGEX)
+    publish_staged(STAGED_FOLDER, KAFKA_BROKER, KAFKA_TOPIC, TOPIC_KEY_REGEX)
     
     # Remove the temporary zip download folder
     if os.path.exists(DOWNLOAD_FOLDER):

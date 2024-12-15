@@ -2,7 +2,7 @@ import zipfile
 import os
 import re
 
-def extract_file_from_zip(zip_filepath, extract_file_regex, output_folder):
+def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_folder: str):
     """
     Function to extract files specified by regex from a zip archive.
     
@@ -34,7 +34,7 @@ def extract_file_from_zip(zip_filepath, extract_file_regex, output_folder):
                 zip_ref.extract(file, output_folder)
                 print(f"Extracted: {file} to {output_folder}")
 
-def extract_all_product_txt_files(in_folder, extract_file_regex, out_folder):
+def extract_all_product_txt_files(in_folder: str, extract_file_regex: str, out_folder: str):
     """
     Function to search all zip archives in a given folder for files specified by regex.
     
