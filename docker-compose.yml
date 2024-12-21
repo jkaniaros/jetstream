@@ -1,46 +1,61 @@
 services:
-  broker:
+  kafka-broker:
     image: apache/kafka
-    container_name: broker
+    container_name: kafka-broker
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://broker:9092,CONTROLLER://broker:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+      KAFKA_LISTENERS: PLAINTEXT://kafka-broker:9092,CONTROLLER://kafka-broker:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-broker:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
-    volumes:
-      - ./data/kafka-data:/var/lib/kafka/data
+      KAFKA_LOG_RETENTION_BYTES: 1000000000 # delete logs every 1 GB
+    # volumes:
+    #   - ./data/kafka-data:/var/lib/kafka/data
     ports:
       - 9092:9092
 
-  # spark-master:
-  #   image: bitnami/spark
-  #   environment:
-  #     SPARK_MODE: master
-  #   ports:
-  #     - "7077:7077"
-  #     - "8080:8080"
-  #   volumes:
-  #     - ./data/spark-data-m:/opt/spark/work
+  spark-master:
+    image: bitnami/spark:3.5.3
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    environment:
+      SPARK_MODE: master
+      SPARK_MASTER_HOST: spark-master
+      SPARK_MASTER_PORT: 7077
 
-  # spark-worker:
-  #   image: bitnami/spark
-  #   environment:
-  #     SPARK_MODE: worker
-  #     SPARK_MASTER_URL: spark://spark-master:7077
-  #   depends_on:
-  #     - spark-master
-  #   ports:
-  #     - "8081:8081"
-  #   volumes:
-  #     - ./data/spark-data-w:/opt/spark/work
+  spark-worker:
+    image: bitnami/spark:3.5.3
+    depends_on:
+      - spark-master
+      - kafka-broker
+    ports:
+      - "8081:8081"
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      KAFKA_BROKER: kafka-broker:9092
+
+  spark-app:
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    depends_on:
+      - spark-master
+      - spark-worker
+      - kafka-broker
+      #- mariadb
+    environment:
+      SPARK_MASTER_URL: spark://spark-master:7077
+      KAFKA_BROKER: kafka-broker:9092
+    restart: always
 
   # mariadb:
   #   image: mariadb
@@ -56,16 +71,18 @@ services:
     build:
       context: ./app
     depends_on:
-      - broker
+      - kafka-broker
+      - spark-master
+      - spark-worker
     environment:
-      KAFKA_BROKER: broker:9092
-
-  consumer:
-    build:
-      context: ./consumer
-    depends_on:
-      - broker
-    environment:
-      KAFKA_BROKER: broker:9092
+      KAFKA_BROKER: kafka-broker:9092
     restart: on-failure
-      
+
+  # consumer:
+  #   build:
+  #     context: ./consumer
+  #   depends_on:
+  #     - kafka-broker
+  #   environment:
+  #     KAFKA_BROKER: kafka-broker:9092
+  #   restart: on-failure

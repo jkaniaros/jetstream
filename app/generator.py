@@ -1,6 +1,6 @@
 from helper.file_downloader import download_all_files
 from helper.zip_extractor import extract_all_product_txt_files
-from helper.kafka_publisher import publish_staged
+from helper.kafka_publisher import publish_staged, create_topic, publish_file
 import shutil
 import os
 from kafka.admin import KafkaAdminClient, NewTopic
@@ -16,7 +16,8 @@ STAGED_FOLDER = os.path.join("tmp", "staged")
 KAFKA_TOPIC = "jetstream"
 TOPIC_KEY_REGEX = r"_(\d+)\.txt$"
 
-DESCRIPTION_FILE = os.path.join(DOWNLOAD_FOLDER, "FF_Stundenwerte_Beschreibung_Stationen.txt")
+KAFKA_DESCRIPTION_TOPIC = "jetstream-description"
+DESCRIPTION_FILE = "FF_Stundenwerte_Beschreibung_Stationen.txt"
 
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER")
 print(f"Kafka Broker: {KAFKA_BROKER}")
@@ -27,13 +28,23 @@ def run():
     """
     ### shutil.rmtree("tmp")
     
+    # Create topics if they don't exist, so that the spark applications don't crash because of missing topics
+    create_topic(KAFKA_TOPIC, KAFKA_BROKER)
+    create_topic(KAFKA_DESCRIPTION_TOPIC, KAFKA_BROKER)
+    
+    # Download zip files from DWD and extract the relevant txt files
     download_all_files(DOWNLOAD_URL, DOWNLOAD_FOLDER)
     extract_all_product_txt_files(DOWNLOAD_FOLDER, EXTRACT_REGEX, STAGED_FOLDER)
     
     # If a station description file exists, copy it to the staged folder too
-    if os.path.exists(DESCRIPTION_FILE):
-        shutil.copy2(DESCRIPTION_FILE, STAGED_FOLDER)
+    if os.path.exists(os.path.join(DOWNLOAD_FOLDER, DESCRIPTION_FILE)):
+        shutil.copy2(os.path.join(DOWNLOAD_FOLDER, DESCRIPTION_FILE), STAGED_FOLDER)
     
+    
+    if os.path.exists(os.path.join(STAGED_FOLDER, DESCRIPTION_FILE)):
+        publish_file(os.path.join(STAGED_FOLDER, DESCRIPTION_FILE), KAFKA_BROKER, KAFKA_DESCRIPTION_TOPIC)
+    
+    # Publish all extracted files to Kafka
     publish_staged(STAGED_FOLDER, KAFKA_BROKER, KAFKA_TOPIC, TOPIC_KEY_REGEX)
     
     # Remove the temporary zip download folder
