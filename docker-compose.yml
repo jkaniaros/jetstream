@@ -51,21 +51,22 @@ services:
       - spark-master
       - spark-worker
       - kafka-broker
-      #- mariadb
+      - mariadb
     environment:
       SPARK_MASTER_URL: spark://spark-master:7077
       KAFKA_BROKER: kafka-broker:9092
-    restart: always
+    restart: always # should never stop working, even if it is finished
 
-  # mariadb:
-  #   image: mariadb
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: example
-  #     MYSQL_DATABASE: exampledb
-  #   ports:
-  #     - "3306:3306"
-  #   volumes:
-  #     - ./data/mariadb-data:/var/lib/mysql
+  mariadb:
+    image: mariadb:11.7.1-ubi9-rc
+    environment:
+      MYSQL_ROOT_PASSWORD: jetstream
+      MYSQL_DATABASE: jetstream
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # - mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB, activate to persist data
 
   generator:
     build:
@@ -78,7 +79,7 @@ services:
       KAFKA_BROKER: kafka-broker:9092
     restart: on-failure
 
-  # consumer:
+  # python-consumer:
   #   build:
   #     context: ./consumer
   #   depends_on:
