@@ -66,7 +66,7 @@ services:
       - "3306:3306"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      # - mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB, activate to persist data
+      - mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB, activate to persist data
 
   generator:
     build:
@@ -87,3 +87,8 @@ services:
   #   environment:
   #     KAFKA_BROKER: kafka-broker:9092
   #   restart: on-failure
+
+# Volumes for persistent data
+volumes:
+  mariadb-data:
+    driver: local
