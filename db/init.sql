@@ -21,7 +21,6 @@ create table if not exists stations (
 );
 
 create table if not exists wind_data (
-    id bigint not null auto_increment,
     station_id bigint not null,
     measurement_date timestamp not null,
     quality_level tinyint comment '
@@ -35,16 +34,9 @@ create table if not exists wind_data (
         QN = 10 : Qualitätsprüfung und Korrektur beendet.',
     wind_speed double comment 'Windgeschwindigkeit in m/s', 
     wind_direction smallint comment 'Windrichtung in Grad',
-    primary key (id),
+    primary key (station_id, measurement_date),
     index idx_station (station_id),
     index idx_date (measurement_date)
-);
-
-create table if not exists extreme_wind_data (
-    id bigint not null auto_increment,
-    wind_data_id bigint,
-    primary key(id),
-    foreign key(wind_data_id) references wind_data(id)
 );
 
 create table if not exists wind_agg (
