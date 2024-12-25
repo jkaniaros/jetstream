@@ -25,12 +25,12 @@ def create_topic(topic: str, broker: str):
         print(f"Created topic '{topic}'")
     else:
         print(f"Topic '{topic}' already exists")
-    
+
 
 def publish_lines(filepath: str, broker: str, producer: str, topic: str, key: int):
     """
     Publish all lines from a file to the Kafka broker on the given topic.
-    
+
     Parameters:
     filepath (str): The filepath of the file to send.
     broker (str): The hostname of the Kafka broker.
@@ -41,12 +41,12 @@ def publish_lines(filepath: str, broker: str, producer: str, topic: str, key: in
     # Return if the file does not exist
     if not os.path.exists(filepath):
         return
-    
+
     # print(f"Publish lines file: {filepath}")
-    
+
     # Create the topic if it doesn't already exist
     create_topic(topic, broker)
-    
+
     try:
         with open(filepath, "r") as file:
             for line in file:
@@ -56,7 +56,7 @@ def publish_lines(filepath: str, broker: str, producer: str, topic: str, key: in
                 else:
                     producer.send(topic=topic, value=bytes(line, encoding='utf-8'))
                     print(f"\t\tSent {line} to Kafka topic '{topic}'")
-                
+
             producer.flush()
     except UnicodeDecodeError:
         with open(filepath, "r", encoding="Windows-1252") as file:
@@ -67,14 +67,14 @@ def publish_lines(filepath: str, broker: str, producer: str, topic: str, key: in
                 else:
                     producer.send(topic=topic, value=bytes(line, encoding='utf-8'))
                     print(f"\t\tSent {line} to Kafka topic '{topic}'")
-                
+
             producer.flush()
-    
+
 
 def publish_staged(folder: str, broker: str, topic: str, key_regex: str):
     """
     Publish all files from folder to the Kafka broker on the specified topic in the key specified by regex.
-    
+
     Parameters:
     folder (str): The filepath where the txt files are stored.
     broker (str): The hostname of the Kafka broker.
@@ -84,29 +84,29 @@ def publish_staged(folder: str, broker: str, topic: str, key_regex: str):
     # Return if the file does not exist
     if not os.path.exists(folder):
         return
-    
+
     producer = KafkaProducer(bootstrap_servers=broker, \
                              client_id="data-generator",\
                              batch_size=0
     )
     pattern = re.compile(key_regex)
-    
+
     # For every file in given folder, publish all lines
     for file in os.listdir(folder):
         key = pattern.search(file)
         if key is not None:
             key = int(key.group(1).lstrip("0"))
-            
+
             print(f"Publish file '{file}' to topic '{topic}' and key '{key}'")
             publish_lines(os.path.join(folder,file), broker, producer, topic, key)
-            
+
     producer.close()
-    
-    
+
+
 def publish_file(filepath: str, broker: str, topic: str, key: str = None):
     """
     Publish all files from folder to the Kafka broker on the specified topic in the key specified by regex.
-    
+
     Parameters:
     filepath (str): The filepath where the file is stored.
     broker (str): The hostname of the Kafka broker.
@@ -116,14 +116,14 @@ def publish_file(filepath: str, broker: str, topic: str, key: str = None):
     # Return if the file does not exist
     if not os.path.exists(filepath):
         return
-    
+
     producer = KafkaProducer(bootstrap_servers=broker, \
                              client_id="data-generator",\
                              batch_size=0
     )
 
-    
+
     print(f"Publish file '{filepath}' to topic '{topic}' and key '{key}'")
     publish_lines(filepath, broker, producer, topic, key)
-            
+
     producer.close()

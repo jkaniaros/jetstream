@@ -1,13 +1,13 @@
+import os
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
-import os
 
 
 # Function to write Kafka messages to MariaDB
 def write_to_mariadb(batch_df, epoch_id, table):
     jdbc_url = "jdbc:mysql://mariadb:3306/jetstream"
-    
+
     connection_properties = {
         "user": "root",
         "password": "jetstream",
@@ -24,7 +24,7 @@ def write_to_mariadb(batch_df, epoch_id, table):
             .save()
     except Exception as e:
         print(f"Error writing batch {epoch_id}: {str(e)}")
-# Duplicate data (caused by reprocessing) should be ignored because of the primary key in the database
+# TODO: Duplicate data (caused by reprocessing) should be ignored because of the primary key in the database
 
 # Create SparkSession
 spark = SparkSession.builder \
@@ -63,7 +63,7 @@ parsed_stream = kafka_stream.selectExpr("cast(value as string)") \
     .withColumn("parsed", split(col("value"), ";")) \
     .select(
         col("parsed")[0].cast(IntegerType()).alias("station_id"),
-        to_timestamp(col("parsed")[1].cast(StringType()), "yyyyMMddHH").alias("measurement_date"),
+        to_timestamp(col("parsed")[1].cast(StringType()), "yyyyMMddHHmm").alias("measurement_date"),
         col("parsed")[2].cast(IntegerType()).alias("quality_level"),
         col("parsed")[3].cast(DoubleType()).alias("wind_speed"),
         col("parsed")[4].cast(IntegerType()).alias("wind_direction")
@@ -88,6 +88,27 @@ parsed_description_stream = kafka_description_stream.selectExpr("cast(value as s
 
 #################### Do some aggregations ####################
 # Average wind speed and direction for each station
+# Aggregations by hour
+station_aggregations_hourly = parsed_stream \
+    .withWatermark("measurement_date", "1 year") \
+    .groupBy(
+        col("station_id"),
+        window(col("measurement_date"), "1 hour", "1 hour")  # Hourly aggregation
+    ) \
+    .agg(
+        round(avg(col("wind_speed"))).alias("avg_wind_speed"),
+        round(avg(col("wind_direction"))).alias("avg_wind_direction")
+    ) \
+    .select(
+        col("station_id"),
+        col("window.start").alias("start_time"),
+        col("window.end").alias("end_time"),
+        col("avg_wind_speed"),
+        col("avg_wind_direction")
+    )
+
+
+# Aggregations by day
 station_aggregations_daily = parsed_stream \
     .withWatermark("measurement_date", "1 year") \
     .groupBy(
@@ -135,12 +156,18 @@ mariadb_query = parsed_stream.writeStream \
     .trigger(processingTime="15 seconds") \
     .start()
 
+mariadb_query_aggregations_hourly = station_aggregations_hourly.writeStream \
+    .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_agg")) \
+    .outputMode("update") \
+    .trigger(processingTime="15 seconds") \
+    .start()
+
 mariadb_query_aggregations_daily = station_aggregations_daily.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_agg")) \
     .outputMode("update") \
     .trigger(processingTime="15 seconds") \
     .start()
-    
+
 mariadb_query_aggregations_weekly = station_aggregations_weekly.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_agg")) \
     .outputMode("update") \

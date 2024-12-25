@@ -5,7 +5,7 @@ import re
 def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_folder: str):
     """
     Function to extract files specified by regex from a zip archive.
-    
+
     Parameters:
     zip_filepath (str): The filepath where the zip archive is stored.
     extract_file_regex (str): The regex string for the files to be extracted.
@@ -15,7 +15,7 @@ def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_fol
     # Return if the zip archive does not exist
     if not os.path.exists(zip_filepath):
         return
-    
+
     # Create output folder if it doesn"t exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -24,9 +24,9 @@ def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_fol
     with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
         # Check if the desired file exists in the zip archive
         file_list = zip_ref.namelist()
-        
+
         pattern = re.compile(extract_file_regex)
-        
+
         # Iterate through all the files in the zip archive and search for the regex
         for file in file_list:
             if pattern.search(file):#  and not os.path.exists(os.path.join(output_folder, file)):
@@ -37,7 +37,7 @@ def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_fol
 def extract_all_product_txt_files(in_folder: str, extract_file_regex: str, out_folder: str):
     """
     Function to search all zip archives in a given folder for files specified by regex.
-    
+
     Parameters:
     in_folder (str): The folder where the zip archives are stored.
     extract_file_regex (str): The regex string for the files to be extracted.
@@ -47,7 +47,7 @@ def extract_all_product_txt_files(in_folder: str, extract_file_regex: str, out_f
     # If the zip archives folder does not exist, return
     if not os.path.exists(in_folder):
         return
-    
+
     # Iterate through all zip files and extract the matching files
     for file in os.listdir(in_folder):
         if file.endswith(".zip"):

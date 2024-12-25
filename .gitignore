@@ -318,5 +318,6 @@ pip-selfcheck.json
 
 /tmp
 /data
+/db/mariadb-data
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,python,venv,spark

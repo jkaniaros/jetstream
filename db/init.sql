@@ -49,5 +49,6 @@ create table if not exists wind_agg (
     primary key (id),
     index idx_station (station_id),
     index idx_start_date (start_time),
-    index idx_end_date (end_Time)
+    index idx_end_date (end_Time),
+    unique (station_id, start_time, end_time)
 );

@@ -26,8 +26,8 @@ Winddaten werden durch DWD stündlich für ca. 300 Städte erhoben, diese werden
 4. MariaDB as central storage
 
 ### Python Web Scraper + Streaming Service
-Stündliche Winddaten werden vom Deutschen Wetterdienst (DWD) täglich aktualisiert. Die Daten des Deutschen Wetterdienstes werden als Open Data kostenfrei unter folgendem
-[Link für Winddaten](https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/wind/recent/) bereitgetellt.
+Stündliche Winddaten werden vom Deutschen Wetterdienst (DWD) in unterschiedlichen Zeitperioden aktualisiert. Die hier verwendeten Daten des Deutschen Wetterdienstes werden regelmäßig als Open Data kostenfrei unter folgendem
+[Link für Winddaten](https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/wind/now/) bereitgetellt.
 
 Die Python-Anwendung `generator.py` bzw `generator` unter Docker lädt die bereitgestellten zip-Files auf der o.g. Website herunter, extrahiert die Dateien und iteriert dann über alle relevanten Wind-Logs.  
 Die Menge der Wind-Logs ist dabei so groß, dass das Verhalten eher einem Stream, statt einer Batch-Verarbeitung gleicht.
