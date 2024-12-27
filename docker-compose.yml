@@ -70,7 +70,7 @@ services:
 
   generator:
     build:
-      context: ./app
+      context: ./generator
     depends_on:
       - kafka-broker
       - spark-master

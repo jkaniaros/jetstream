@@ -17,9 +17,9 @@ class HtmlParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         # Check for <a> tag (links)
-        if tag == 'a':
+        if tag == "a":
             for attr in attrs:
-                if attr[0] == 'href':
+                if attr[0] == "href":
                     file_url = urljoin(self.base_url, attr[1])
                     self.file_links.append(file_url)
 
@@ -91,7 +91,7 @@ def download_all_files(url: str, folder: str, min_timestamp: datetime) -> (int, 
                     print(f"Downloading {file_url}")
                     download_file(file_url, folder)
             return (0, parser.latest_timestamp)
-        
+
         # If no download was necessary
         return (1, parser.latest_timestamp)
     else:
