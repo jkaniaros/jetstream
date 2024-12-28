@@ -8,7 +8,7 @@
     - [Apache Kafka as Message Queue](#apache-kafka-as-message-queue)
     - [Apache Spark for Data Preparation](#apache-spark-for-data-preparation)
     - [MariaDB as central storage](#mariadb-as-central-storage)
-  - [Entwurf](#entwurf)
+  - [Development](#development)
   - [Screencast](#screencast)
 
 
@@ -65,20 +65,46 @@ For this purpose, dependencies are downloaded as JAR files and stored in the `/o
 In the Spark application, both Kafka topics described above are read as a stream and processed accordingly.  
 First, the streams are converted into the correct format (conversion of the JSON byte array into CSV, then from CSV into usable columns). Incorrect rows, e.g. zero values in the station ID or wind speeds <= 0, are removed.
 
-After that, aggregations take place:
+<!-- After that, aggregations take place:
 - `station_aggregations_daily`: Calculation of the average wind speed and direction per weather station at daily level.
-- `station_aggregations_weekly`: Calculation of the average wind speed and direction per weather station at weekly level.
+- `station_aggregations_weekly`: Calculation of the average wind speed and direction per weather station at weekly level. -->
 
-Finally, the converted weather and station data as well as the aggregations are stored in the corresponding tables in MariaDB for further use.  
+Finally, the converted weather and station data <!-- as well as the aggregations--> are stored in the corresponding tables in MariaDB for further use.  
 The converted weather data is also displayed on the console to provide an overview of whether processing is running or not.
 
 ### MariaDB as central storage
 MariaDB is used for central storage. When MariaDB is initially started, all necessary databases and tables are created via an init file if they do not already exist.  
-- The `stations` table contains all the information on the weather stations from the description file.  
-- The `wind_data` table contains all converted and filtered data. This is where the history is built up.  
-- The `wind_agg` table contains all the aggregations carried out, i.e. the average wind direction and speed at daily and weekly level for each station. It is indexed accordingly to speed up searches.
+- The `stations` table contains all the information on the weather stations from the description file:  
+  ```sql
+  station_id bigint not null,
+  von_datum timestamp not null,
+  bis_datum timestamp not null,
+  stationshoehe smallint, 
+  geoBreite double,
+  geoLaenge double,
+  stationsname text,
+  bundesland text,
+  abgabe text
+  ```
+- The `wind_data` table contains all converted and filtered data. This is where the history is built up:  
+  ```sql
+  station_id bigint not null,
+  measurement_date timestamp not null,
+  quality_level tinyint,
+  wind_speed double comment 'Windgeschwindigkeit in m/s', 
+  wind_direction smallint comment 'Windrichtung in Grad'
+  ```
+<!-- - The `wind_agg` table contains all the aggregations carried out, i.e. the average wind direction and speed at daily and weekly level for each station. It is indexed accordingly to speed up searches:  
+  ```sql
+  id bigint not null auto_increment,
+  station_id bigint not null,
+  start_time timestamp not null,
+  end_time timestamp not null,
+  avg_wind_speed double,
+  avg_wind_direction smallint
+  ```-->
 
-## Entwurf
+## Development
 - Build + create container: `docker-compose build --no-cache; docker-compose up -d`
 - Remove everything: `docker-compose down`
 - Restart: `docker-compose down; docker-compose build; docker-compose up -d`

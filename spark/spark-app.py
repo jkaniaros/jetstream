@@ -115,7 +115,7 @@ console_query = parsed_stream.writeStream \
     .outputMode("append") \
     .format("console") \
     .option("truncate", "false") \
-    .trigger(processingTime='15 seconds') \
+    .trigger(processingTime="15 seconds") \
     .start()
 
 

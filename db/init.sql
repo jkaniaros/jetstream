@@ -3,8 +3,7 @@ use jetstream;
 
 --drop table if exists stations;
 --drop table if exists wind_data;
---drop table if exists wind_agg_daily;
---drop table if exists wind_agg_weekly;
+--drop table if exists wind_agg
 
 create table if not exists stations (
     station_id bigint not null,
