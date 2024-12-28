@@ -86,7 +86,7 @@ def _publish_lines_core(filepath: str, producer: str, topic: str, key: int, arch
                     print(f"\t\tSent '{line}' to Kafka topic '{topic}'")
 
                 if archive_file is not None:
-                    archive_file.write(line)
+                    archive_file.write(f"{line}\n")
 
             producer.flush()
     finally:

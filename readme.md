@@ -41,15 +41,10 @@ STATIONS_ID;MESS_DATUM;QN_3;F;D;eor
 2667;2024121803;1;5.0;130;eor
 ```
 
-The quality niveau is described by the DWD as following([Description of wind data](https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/wind/BESCHREIBUNG_obsgermany_climate_hourly_wind_de.pdf)):
-- QN = 1 : only formal inspection
-- QN = 2 : checked according to individual criteria
-- QN = 3 : automatic checking and correction
-- QN = 5 : historical, subjective procedures
-- QN = 7 : checked, maintained, not corrected
-- QN = 8 : Quality assurance outside routine
-- QN = 9 : not all parameters corrected
-- QN = 10 : Quality check and correction completed.
+The quality niveau is described by the DWD as following([Description of wind data](https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/wind/BESCHREIBUNG_obsgermany_climate_10min_wind_de.pdf)):
+- QN = 1 : only formal inspection;
+- QN = 2 : checked according to individual criteria;
+- QN = 3 : automatic checking and correction.
 
 ### Apache Kafka as Message Queue
 An Apache Kafka broker is used in the cluster as a central message queue. Two topics are used here: `jetstream` for the weather data and `jetstream-description` for the description file of the weather data (in particular, weather station information can be found here).
