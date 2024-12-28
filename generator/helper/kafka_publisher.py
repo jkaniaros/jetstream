@@ -71,12 +71,19 @@ def _publish_lines_core(filepath: str, producer: str, topic: str, key: int, arch
     try:
         with open(filepath, "r", encoding=encoding) as file:
             for line in file:
+                line = line.strip()
+
+                # Check if the first line contains header information. If yes, exclude it
+                if line.upper().startswith("STATION") or line.upper().startswith("---"):
+                        continue
+
+                # Send with key if it is set
                 if key is not None:
                     producer.send(topic=topic, key=bytes(key), value=bytes(line, encoding="UTF-8"))
-                    print(f"\t\tSent {line} to Kafka topic '{topic}' and key '{key}'")
+                    print(f"\t\tSent '{line}' to Kafka topic '{topic}' and key '{key}'")
                 else:
                     producer.send(topic=topic, value=bytes(line, encoding="UTF-8"))
-                    print(f"\t\tSent {line} to Kafka topic '{topic}'")
+                    print(f"\t\tSent '{line}' to Kafka topic '{topic}'")
 
                 if archive_file is not None:
                     archive_file.write(line)

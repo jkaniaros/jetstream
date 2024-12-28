@@ -7,7 +7,7 @@ use jetstream;
 --drop table if exists wind_agg_weekly;
 
 create table if not exists stations (
-    stations_id bigint not null,
+    station_id bigint not null,
     von_datum timestamp not null,
     bis_datum timestamp not null,
     stationshoehe smallint, 
@@ -16,8 +16,8 @@ create table if not exists stations (
     stationsname text,
     bundesland text,
     abgabe text,
-    primary key (stations_id),
-    index idx_station (stations_id)
+    primary key (station_id),
+    index idx_station (station_id)
 );
 
 create table if not exists wind_data (
@@ -39,16 +39,16 @@ create table if not exists wind_data (
     index idx_date (measurement_date)
 );
 
-create table if not exists wind_agg (
-    id bigint not null auto_increment,
-    station_id bigint not null,
-    start_time timestamp not null,
-    end_time timestamp not null,
-    avg_wind_speed double,
-    avg_wind_direction smallint,
-    primary key (id),
-    index idx_station (station_id),
-    index idx_start_date (start_time),
-    index idx_end_date (end_Time),
-    unique (station_id, start_time, end_time)
-);
+-- create table if not exists wind_agg (
+--     id bigint not null auto_increment,
+--     station_id bigint not null,
+--     start_time timestamp not null,
+--     end_time timestamp not null,
+--     avg_wind_speed double,
+--     avg_wind_direction smallint,
+--     primary key (id),
+--     index idx_station (station_id),
+--     index idx_start_date (start_time),
+--     index idx_end_date (end_Time),
+--     unique (station_id, start_time, end_time)
+-- );

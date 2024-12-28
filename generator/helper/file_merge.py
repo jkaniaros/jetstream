@@ -61,7 +61,7 @@ def merge_files_by_regex(in_folder: str, out_folder: str, regex: str, archive_fo
                 with open(file_path, "r", encoding="UTF-8") as in_file:
                     lines = in_file.readlines()
                     # Check if the first line contains header information. If yes, exclude it
-                    if lines and lines[0].startswith("STATION"):
+                    if lines and lines[0].upper().startswith("STATION"):
                         lines = lines[1:]
 
                     for line in lines:

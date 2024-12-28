@@ -22,9 +22,13 @@ def write_to_mariadb(batch_df, epoch_id, table):
             .option("dbtable", table) \
             .options(**connection_properties) \
             .save()
-    except Exception as e:
-        print(f"Error writing batch {epoch_id}: {str(e)}")
-# TODO: Duplicate data (caused by reprocessing) should be ignored because of the primary key in the database
+
+        batch_df.write \
+            .format("kafka") \
+            .save()  # Ensure offsets are committed to Kafka after processing
+
+    except Exception as ex:
+        print(f"Error writing to table {table} - batch {epoch_id}: {str(ex)}")
 
 # Create SparkSession
 spark = SparkSession.builder \
@@ -39,7 +43,7 @@ spark.sparkContext.setLogLevel("WARN")
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER")
 
 #################### Read from Kafka ####################
-
+# Start from earliest offset (either from beginning or from latest commit)
 kafka_stream = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
@@ -74,7 +78,7 @@ parsed_stream = kafka_stream.selectExpr("cast(value as string)") \
 parsed_description_stream = kafka_description_stream.selectExpr("cast(value as string)") \
     .withColumn("parsed", split(col("value"), r"\s+")) \
     .select (
-        col("parsed")[0].cast(IntegerType()).alias("stations_id"),
+        col("parsed")[0].cast(IntegerType()).alias("station_id"),
         to_date(col("parsed")[1].cast(StringType()), "yyyyMMdd").alias("von_datum"),
         to_date(col("parsed")[2].cast(StringType()), "yyyyMMdd").alias("bis_datum"),
         col("parsed")[3].cast(IntegerType()).alias("stationshoehe"),
@@ -83,69 +87,8 @@ parsed_description_stream = kafka_description_stream.selectExpr("cast(value as s
         col("parsed")[6].cast(StringType()).alias("stationsname"),
         col("parsed")[7].cast(StringType()).alias("bundesland"),
         col("parsed")[8].cast(StringType()).alias("abgabe")
-    )
-
-
-#################### Do some aggregations ####################
-# Average wind speed and direction for each station
-# Aggregations by hour
-station_aggregations_hourly = parsed_stream \
-    .withWatermark("measurement_date", "1 year") \
-    .groupBy(
-        col("station_id"),
-        window(col("measurement_date"), "1 hour", "1 hour")  # Hourly aggregation
     ) \
-    .agg(
-        round(avg(col("wind_speed"))).alias("avg_wind_speed"),
-        round(avg(col("wind_direction"))).alias("avg_wind_direction")
-    ) \
-    .select(
-        col("station_id"),
-        col("window.start").alias("start_time"),
-        col("window.end").alias("end_time"),
-        col("avg_wind_speed"),
-        col("avg_wind_direction")
-    )
-
-
-# Aggregations by day
-station_aggregations_daily = parsed_stream \
-    .withWatermark("measurement_date", "1 year") \
-    .groupBy(
-        col("station_id"),
-        window(col("measurement_date"), "1 day", "1 day")  # Daily aggregation
-    ) \
-    .agg(
-        round(avg(col("wind_speed"))).alias("avg_wind_speed"),
-        round(avg(col("wind_direction"))).alias("avg_wind_direction")
-    ) \
-    .select(
-        col("station_id"),
-        col("window.start").alias("start_time"),
-        col("window.end").alias("end_time"),
-        col("avg_wind_speed"),
-        col("avg_wind_direction")
-    )
-
-
-# Aggregations by week
-station_aggregations_weekly = parsed_stream \
-    .withWatermark("measurement_date", "1 year") \
-    .groupBy(
-        col("station_id"),
-        window(col("measurement_date"), "1 week", "1 week")  # Weekly aggregation
-    ) \
-    .agg(
-        round(avg(col("wind_speed"))).alias("avg_wind_speed"),
-        round(avg(col("wind_direction"))).alias("avg_wind_direction")
-    ) \
-    .select(
-        col("station_id"),
-        col("window.start").alias("start_time"),
-        col("window.end").alias("end_time"),
-        col("avg_wind_speed"),
-        col("avg_wind_direction")
-    )
+    .filter(col("station_id").isNotNull())
 
 
 #################### Write to MariaDB ####################
@@ -153,40 +96,24 @@ station_aggregations_weekly = parsed_stream \
 mariadb_query = parsed_stream.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_data")) \
     .outputMode("update") \
-    .trigger(processingTime="15 seconds") \
+    .option("checkpointLocation", "/tmp/parsed_stream_checkpoint") \
+    .trigger(processingTime="1 second") \
     .start()
-
-mariadb_query_aggregations_hourly = station_aggregations_hourly.writeStream \
-    .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_agg")) \
-    .outputMode("update") \
-    .trigger(processingTime="15 seconds") \
-    .start()
-
-mariadb_query_aggregations_daily = station_aggregations_daily.writeStream \
-    .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_agg")) \
-    .outputMode("update") \
-    .trigger(processingTime="15 seconds") \
-    .start()
-
-mariadb_query_aggregations_weekly = station_aggregations_weekly.writeStream \
-    .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_agg")) \
-    .outputMode("update") \
-    .trigger(processingTime="15 seconds") \
-    .start()
+    # continuous trigger doesn't seem to work...
 
 mariadb_query_stations = parsed_description_stream.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "stations")) \
     .outputMode("update") \
-    .trigger(processingTime="15 seconds") \
+    .option("checkpointLocation", "/tmp/parsed_description_stream_checkpoint") \
+    .trigger(processingTime="1 second") \
     .start()
-
+    # continuous trigger doesn't seem to work...
 
 #################### Write processed data to console ####################
 
 console_query = parsed_stream.writeStream \
     .outputMode("append") \
     .format("console") \
-    .option("checkpointLocation", "/tmp/kafka_checkpoint") \
     .option("truncate", "false") \
     .trigger(processingTime='15 seconds') \
     .start()
