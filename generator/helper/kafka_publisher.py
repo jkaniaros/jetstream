@@ -23,8 +23,6 @@ def create_topic(topic: str, broker: str):
         new_topics.append(NewTopic(name=topic, num_partitions=1000, replication_factor=1))
         kafka_admin_client.create_topics(new_topics=new_topics)
         print(f"Created topic '{topic}'")
-    else:
-        print(f"Topic '{topic}' already exists")
 
 
 def publish_lines(filepath: str, broker: str, producer: str, topic: str, key: int, archive_folder: str):

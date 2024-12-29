@@ -1,7 +1,9 @@
-# Laborarbeit Big Data Engineering WiSe 2024/2025
+# Jetstream - German Wind Data Collector
+
+> Laborarbeit Big Data Engineering WiSe 2024/2025  
 > Jannis Kaniaros & Fabian Lohmüller
 
-- [Laborarbeit Big Data Engineering WiSe 2024/2025](#laborarbeit-big-data-engineering-wise-20242025)
+- [Jetstream - German Wind Data Collector](#jetstream---german-wind-data-collector)
   - [Idea](#idea)
   - [Architecture](#architecture)
     - [Python Web Scraper + Streaming Service](#python-web-scraper--streaming-service)
@@ -191,4 +193,6 @@ MariaDB:
 
 ## Screencast
 
-In the Screencast all functionalities and features will be shown and explained:
+In the Screencast all functionalities and features will be shown and explained: [Link to Screencast](https://youtu.be/yBl7Z202REg)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/yBl7Z202REg?si=zecdk0me74TFCWlM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

@@ -27,6 +27,8 @@ def write_to_mariadb(batch_df, epoch_id, table):
             .options(**connection_properties) \
             .save()
 
+        print(f"Batch with {batch_df.count()} elements successfully saved to database table {table}")
+
     except Exception as ex:
         print(f"Error writing to table {table} - batch {epoch_id}: {str(ex)}")
 

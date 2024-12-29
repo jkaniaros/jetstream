@@ -47,9 +47,8 @@ def run():
 
     x = 0
     while True:
-         
         x+=1
-        print(f"Stating iteration {x}:")
+        print(f"{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}: Stating iteration {x}:")
 
         # Download zip files from DWD and extract the relevant txt files
         _, max_run_ts = download_all_files(DOWNLOAD_URL, DOWNLOAD_FOLDER, max_run_ts)
@@ -78,7 +77,7 @@ def run():
         if os.path.exists(MERGED_FOLDER):
             shutil.rmtree(MERGED_FOLDER)
 
-        print(f"Finishing iteration, waiting {LOOP_WAIT_TIME} seconds")
+        print(f"{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}: Finishing iteration {x}, waiting {LOOP_WAIT_TIME} seconds")
 
         # Wait for a defined interval before the next run
         time.sleep(LOOP_WAIT_TIME)
