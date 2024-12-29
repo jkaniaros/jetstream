@@ -133,5 +133,5 @@ delimiter ;
 
 -- schedule the procedure to run regularly using an event
 create event if not exists TransferStagingEvent
-on schedule every 20 second do
+on schedule every 5 second do
 call TransferStagingToProduction();

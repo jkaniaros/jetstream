@@ -105,7 +105,7 @@ mariadb_query = parsed_stream.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_data")) \
     .outputMode("update") \
     .option("checkpointLocation", "/tmp/parsed_stream_checkpoint") \
-    .trigger(processingTime="5 second") \
+    .trigger(processingTime="1 second") \
     .start()
     # continuous trigger doesn't seem to work...
 

@@ -38,10 +38,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -49,8 +45,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 6,
+        "h": 6,
+        "w": 9,
         "x": 0,
         "y": 0
       },
@@ -155,9 +151,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 6,
+        "h": 11,
+        "w": 15,
+        "x": 9,
         "y": 0
       },
       "id": 2,
@@ -226,8 +222,209 @@
           "table": "wind_data"
         }
       ],
-      "title": "Count of entries per day",
+      "title": "Count of entries per hour",
       "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "P2ABB19EC46770D68"
+      },
+      "description": "moderate wind speed >= 5\n\nhigh wind speed >= 10\n\nextreme wind speed >= 17",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "wind_speed"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "blue",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "#EAB839",
+                      "value": 5
+                    },
+                    {
+                      "color": "#EF843C",
+                      "value": 10
+                    },
+                    {
+                      "color": "red",
+                      "value": 17
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 9,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "basemap": {
+          "config": {},
+          "name": "Layer 0",
+          "type": "default"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": false,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "field": "wind_speed",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.4,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "wind speed [m/s]:",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "coords",
+          "lat": 51.278959,
+          "lon": 9.701114,
+          "zoom": 5.65
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "dataset": "jetstream",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n    s.station_id AS ID,\r\n    s.stationsname AS Stationsname,\r\n    s.geolaenge AS Longitude,\r\n    s.geobreite AS Latitude,\r\n    wd.wind_speed,\r\n    wd.measurement_date\r\nFROM\r\n    jetstream.stations AS s\r\nleft JOIN\r\n    jetstream.wind_data AS wd ON s.station_id = wd.station_id\r\nWHERE\r\n    wd.measurement_date is null or wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "station_id",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "geolaenge",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "geobreite",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "stations"
+        }
+      ],
+      "title": "Last wind speed per station",
+      "type": "geomap"
     },
     {
       "datasource": {
@@ -298,10 +495,10 @@
         ]
       },
       "gridPos": {
-        "h": 7,
-        "w": 18,
-        "x": 0,
-        "y": 8
+        "h": 9,
+        "w": 15,
+        "x": 9,
+        "y": 11
       },
       "id": 3,
       "options": {
@@ -361,7 +558,7 @@
     }
   ],
   "preload": false,
-  "refresh": "10s",
+  "refresh": "5s",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
@@ -375,6 +572,6 @@
   "timezone": "browser",
   "title": "Jetstream",
   "uid": "ce8dw5vc0bev4a",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }
