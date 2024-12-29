@@ -156,6 +156,23 @@ end;
 In order to able to view the stored data, PHPMyAdmin is available on port `8090`.
 
 
+### Grafana for monitoring
+Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed via localhost:3000. Here you have to enter “jetstream” as username and password to log in. The default dashboard “Jetstream” can now be selected under Dashboards on the left-hand side.
+
+![Grafana Dashboards](img/grafana_dashboards.png)
+
+The following data are displayed here:
+
+- **Count of stations:** Shows the count of all stations
+- **Count of entries per hour:** Shows the count of wind data entries per hour for all stations
+- **Last wind speed per station:** Displays a GeoMap containing all stations. The stations are color-coded according to wind speed
+- **All stations with high wind speed today:** Shows all stations which have a wind speed over 10 for today
+
+![Graphana Dasboard](img/grafana_dashboard.png)
+
+Of course, the data are changed live as soon as new data are available in the database (approximately every 30 minutes).
+
+
 ## Development
 - Build + create container: `docker-compose build --no-cache; docker-compose up -d`
 - Remove everything: `docker-compose down`
