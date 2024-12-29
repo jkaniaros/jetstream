@@ -9,6 +9,7 @@
     - [Apache Spark for Data Preparation](#apache-spark-for-data-preparation)
     - [MariaDB as central storage](#mariadb-as-central-storage)
     - [PHPMyAdmin as web view for MariaDB](#phpmyadmin-as-web-view-for-mariadb)
+    - [Grafana for monitoring](#grafana-for-monitoring)
   - [Development](#development)
   - [Screencast](#screencast)
 
@@ -48,7 +49,8 @@ An Apache Kafka broker is used in the cluster as a central message queue. Two to
 For reasons of simplicity, no replication is used for the Kafka Broker. The log files are also deleted after 1 gigabyte so that the disk space of the host machine is not overfilled or configuration adjustments (e.g. maximum hard disk space used) are necessary for docker.
 
 ### Apache Spark for Data Preparation
-Apache Spark is used as the central technology for data processing. A Spark master and a Spark worker are first created in the cluster for this purpose. The Bitnami Spark image is used for this.
+Apache Spark is used as the central technology for data processing. A Spark master and two Spark workers are first created in the cluster for this purpose. The Bitnami Spark image is used for this.  
+The master information is shown on port [`8080`](https://localhost:8080), whereas the worker information are shown on ports [`8081`](https://localhost:8081) and [`8082`](https://localhost:8082).
 
 The Bitnami Spark image is also used as the base image for the Spark application, although adjustments still need to be made to make the combination of Spark, Kafka and MariaDB executable.  
 For this purpose, dependencies are downloaded as JAR files and stored in the `/opt/bitnami/spark/jars/` folder. After installing the Python dependencies, the application file can then be transferred via `spark-submit` and passed to the Spark workers for processing.
@@ -153,24 +155,24 @@ end;
 ```
 
 ### PHPMyAdmin as web view for MariaDB
-In order to able to view the stored data, PHPMyAdmin is available on port `8090`.
+In order to able to view the stored data, PHPMyAdmin is available on port [`8090`](http://localhost:8090).
 
 
 ### Grafana for monitoring
-Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed via localhost:3000. Here you have to enter “jetstream” as username and password to log in. The default dashboard “Jetstream” can now be selected under Dashboards on the left-hand side.
+Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed on port [`3000`](http://localhost:3000). Here you have to enter `jetstream` as username and password to log in. The default dashboard `Jetstream` can now be selected under Dashboards on the left-hand side.
 
 ![Grafana Dashboards](img/grafana_dashboards.png)
 
 The following data are displayed here:
 
-- **Count of stations:** Shows the count of all stations
+- **Count of stations:** Shows the amount of all stations saved in the database
 - **Count of entries per hour:** Shows the count of wind data entries per hour for all stations
 - **Last wind speed per station:** Displays a GeoMap containing all stations. The stations are color-coded according to wind speed
-- **All stations with high wind speed today:** Shows all stations which have a wind speed over 10 for today
+- **All stations today with high wind speed as last data point:** Shows the last wind speed for all stations which have a wind speed over 10 as their last data point (but only if the last data point is today)
 
 ![Graphana Dasboard](img/grafana_dashboard.png)
 
-Of course, the data are changed live as soon as new data are available in the database (approximately every 30 minutes).
+Of course, the data are changed live as soon as new data are available in the database. This happens approximately every 30 minutes because of the update cycle of the DWD.
 
 
 ## Development
