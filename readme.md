@@ -190,3 +190,5 @@ MariaDB:
 - Queries: `select * from wind_data;`
 
 ## Screencast
+
+In the Screencast all functionalities and features will be shown and explained:
