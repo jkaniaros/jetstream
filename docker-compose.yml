@@ -79,7 +79,7 @@ services:
     command: ["--event-scheduler=ON"] # enable event scheduler
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db/mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB
+      - mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -113,7 +113,7 @@ services:
       - GF_SECURITY_ADMIN_USER=jetstream
       - GF_SECURITY_ADMIN_PASSWORD=jetstream
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
       - ./grafana:/etc/grafana/provisioning/dashboards
       - ./grafana:/etc/grafana/provisioning/datasources
       - ./grafana:/var/lib/grafana/dashboards
@@ -133,5 +133,5 @@ services:
 volumes:
   mariadb-data:
     driver: local
-  grafana_data:
+  grafana-data:
     driver: local

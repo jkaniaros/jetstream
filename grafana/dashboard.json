@@ -18,12 +18,13 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 1,
   "links": [],
   "panels": [
     {
       "datasource": {
-        "uid": "de8ds1znu6m80b"
+        "type": "mysql",
+        "uid": "P2ABB19EC46770D68"
       },
       "fieldConfig": {
         "defaults": {
@@ -75,9 +76,10 @@
       "targets": [
         {
           "dataset": "jetstream",
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT COUNT(station_id) FROM jetstream.stations LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(station_id) FROM jetstream.stations",
           "refId": "A",
           "sql": {
             "columns": [
@@ -111,7 +113,7 @@
     {
       "datasource": {
         "type": "mysql",
-        "uid": "de8ds1znu6m80b"
+        "uid": "P2ABB19EC46770D68"
       },
       "fieldConfig": {
         "defaults": {
@@ -230,7 +232,7 @@
     {
       "datasource": {
         "type": "mysql",
-        "uid": "de8ds1znu6m80b"
+        "uid": "P2ABB19EC46770D68"
       },
       "description": "high wind speed >= 10 m/s\n\nextreme wind speed >=17 m/s",
       "fieldConfig": {
@@ -373,6 +375,6 @@
   "timezone": "browser",
   "title": "Jetstream",
   "uid": "ce8dw5vc0bev4a",
-  "version": 4,
+  "version": 2,
   "weekStart": ""
 }

@@ -6,7 +6,7 @@ datasources:
     access: proxy
     url: mariadb:3306
     database: jetstream
-    user: jetstream
+    user: root
     secureJsonData:
       password: jetstream
     isDefault: true
