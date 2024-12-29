@@ -52,11 +52,11 @@ def download_file(url: str, folder: str):
     if r.status_code == 200:
         # Get filename from URL
         filename = os.path.join(folder, url.split("/")[-1])
-        print(f"Filename {filename}")
+        #print(f"Filename {filename}")
 
         with open(filename, "wb") as f:
             f.write(r.content)
-            print(f"Downloaded {filename}")
+            #print(f"Downloaded {filename}")
     else:
         print(f"Failed to download {filename}")
 

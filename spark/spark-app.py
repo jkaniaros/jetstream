@@ -23,10 +23,6 @@ def write_to_mariadb(batch_df, epoch_id, table):
             .options(**connection_properties) \
             .save()
 
-        batch_df.write \
-            .format("kafka") \
-            .save()  # Ensure offsets are committed to Kafka after processing
-
     except Exception as ex:
         print(f"Error writing to table {table} - batch {epoch_id}: {str(ex)}")
 
@@ -49,6 +45,7 @@ kafka_stream = spark.readStream \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("subscribe", "jetstream") \
     .option("startingOffsets", "earliest") \
+    .option("checkpointLocation", "/tmp/kafka_stream_checkpoint") \
     .load()
 
 kafka_description_stream = spark.readStream \
@@ -57,6 +54,7 @@ kafka_description_stream = spark.readStream \
     .option("subscribe", "jetstream-description") \
     .option("startingOffsets", "earliest") \
     .option("encoding", "ISO-8859-1") \
+    .option("checkpointLocation", "/tmp/kafka_description_stream_checkpoint") \
     .load()
 
 
@@ -97,7 +95,7 @@ mariadb_query = parsed_stream.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_data")) \
     .outputMode("update") \
     .option("checkpointLocation", "/tmp/parsed_stream_checkpoint") \
-    .trigger(processingTime="1 second") \
+    .trigger(processingTime="5 second") \
     .start()
     # continuous trigger doesn't seem to work...
 

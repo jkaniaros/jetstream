@@ -45,8 +45,11 @@ def run():
     create_topic(KAFKA_DESCRIPTION_TOPIC, KAFKA_BROKER)
 
 
+    x = 0
     while True:
-        print("Stating new iteration...")
+         
+        x+=1
+        print(f"Stating iteration {x}:")
 
         # Download zip files from DWD and extract the relevant txt files
         _, max_run_ts = download_all_files(DOWNLOAD_URL, DOWNLOAD_FOLDER, max_run_ts)
@@ -79,6 +82,7 @@ def run():
 
         # Wait for a defined interval before the next run
         time.sleep(LOOP_WAIT_TIME)
+        print("-----------------------------------------------------------------------------")
 
 if __name__ == "__main__":
     run()
