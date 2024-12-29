@@ -76,9 +76,22 @@ services:
       MYSQL_DATABASE: jetstream
     ports:
       - "3306:3306"
+    command: ["--event-scheduler=ON"] # enable event scheduler
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./db/mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: root
+      PMA_PASSWORD: jetstream
+    ports:
+      - "8090:80"
+    depends_on:
+      - mariadb
 
   generator:
     build:

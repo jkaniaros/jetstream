@@ -14,6 +14,10 @@ def write_to_mariadb(batch_df, epoch_id, table):
         "driver": "com.mysql.cj.jdbc.Driver"
     }
 
+    # Write everything to the staging table,
+        # because sometimes data gets corrected afterwards by DWD causing duplicate errors for primary keys
+    table = f"{table}_staging"
+
     try:
         batch_df.write \
             .format("jdbc") \
@@ -60,7 +64,11 @@ kafka_description_stream = spark.readStream \
 
 #################### Parse messages ####################
 
-# Parse messages into readable format and apply schema
+# Split by either semicolon or whitespace (depending on file type (CSV / space separated))
+# Apply schema
+# Remove faulty data
+
+# Wind data
 parsed_stream = kafka_stream.selectExpr("cast(value as string)") \
     .withColumn("parsed", split(col("value"), ";")) \
     .select(
@@ -73,18 +81,20 @@ parsed_stream = kafka_stream.selectExpr("cast(value as string)") \
     .filter(col("station_id").isNotNull()) \
     .filter(col("wind_speed") >= 0)
 
+# Station description
 parsed_description_stream = kafka_description_stream.selectExpr("cast(value as string)") \
     .withColumn("parsed", split(col("value"), r"\s+")) \
-    .select (
+    .select(
         col("parsed")[0].cast(IntegerType()).alias("station_id"),
         to_date(col("parsed")[1].cast(StringType()), "yyyyMMdd").alias("von_datum"),
         to_date(col("parsed")[2].cast(StringType()), "yyyyMMdd").alias("bis_datum"),
         col("parsed")[3].cast(IntegerType()).alias("stationshoehe"),
         col("parsed")[4].cast(DoubleType()).alias("geoBreite"),
         col("parsed")[5].cast(DoubleType()).alias("geoLaenge"),
-        col("parsed")[6].cast(StringType()).alias("stationsname"),
-        col("parsed")[7].cast(StringType()).alias("bundesland"),
-        col("parsed")[8].cast(StringType()).alias("abgabe")
+        # collect all words except for the last 2 (bundesland, abgabe) and add them back together
+        concat_ws(" ", expr("slice(parsed, 7, size(parsed) - 8)")).alias("stationsname"),
+        col("parsed")[expr("size(parsed) - 2")].cast(StringType()).alias("bundesland"), # doesn't have whitespaces
+        col("parsed")[expr("size(parsed) - 1")].cast(StringType()).alias("abgabe") # doesn't seem to have whitespaces
     ) \
     .filter(col("station_id").isNotNull())
 
@@ -113,7 +123,7 @@ console_query = parsed_stream.writeStream \
     .outputMode("append") \
     .format("console") \
     .option("truncate", "false") \
-    .trigger(processingTime="15 seconds") \
+    .trigger(processingTime="5 seconds") \
     .start()
 
 
