@@ -78,7 +78,7 @@ services:
       - "3306:3306"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      # - ./db/mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB
+      - ./db/mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB
 
   generator:
     build:
@@ -90,6 +90,22 @@ services:
     environment:
       KAFKA_BROKER: kafka-broker:9092
     restart: on-failure
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=jetstream
+      - GF_SECURITY_ADMIN_PASSWORD=jetstream
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana:/etc/grafana/provisioning/dashboards
+      - ./grafana:/etc/grafana/provisioning/datasources
+      - ./grafana:/var/lib/grafana/dashboards
+    depends_on:
+      - mariadb
 
   # python-consumer:
   #   build:
@@ -103,4 +119,6 @@ services:
 # Volumes for persistent data
 volumes:
   mariadb-data:
+    driver: local
+  grafana_data:
     driver: local
