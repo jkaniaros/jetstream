@@ -157,7 +157,7 @@ In order to able to view the stored data, PHPMyAdmin is available on port `8090`
 
 
 ### Grafana for monitoring
-Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed via localhost:3000. Here you have to enter “jetstream” as username and password to log in. The default dashboard “Jetstream” can now be selected under Dashboards on the left-hand side.
+Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed via [http://localhost:3000](http://localhost:3000). Here you have to enter “jetstream” as username and password to log in. The default dashboard “Jetstream” can now be selected under Dashboards on the left-hand side.
 
 ![Grafana Dashboards](img/grafana_dashboards.png)
 
@@ -188,3 +188,5 @@ MariaDB:
 - Queries: `select * from wind_data;`
 
 ## Screencast
+
+In the Screencast all functionalities and features will be shown and explained:
