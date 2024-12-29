@@ -90,6 +90,8 @@ services:
       PMA_PASSWORD: jetstream
     ports:
       - "8090:80"
+    depends_on:
+      - mariadb
 
   generator:
     build:
