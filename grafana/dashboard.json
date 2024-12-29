@@ -378,7 +378,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n    s.station_id AS ID,\r\n    s.stationsname AS Stationsname,\r\n    s.geolaenge AS Longitude,\r\n    s.geobreite AS Latitude,\r\n    wd.wind_speed,\r\n    wd.measurement_date\r\nFROM\r\n    jetstream.stations AS s\r\nleft JOIN\r\n    jetstream.wind_data AS wd ON s.station_id = wd.station_id\r\nWHERE\r\n    wd.measurement_date is null or wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
+          "rawSql": "SELECT\r\n    s.station_id AS ID,\r\n    s.stationsname AS Stationsname,\r\n    s.geolaenge AS Longitude,\r\n    s.geobreite AS Latitude,\r\n    wd.wind_speed,\r\n    wd.wind_direction,\r\n    wd.measurement_date\r\nFROM\r\n    jetstream.stations AS s\r\nleft JOIN\r\n    jetstream.wind_data AS wd ON s.station_id = wd.station_id\r\nWHERE\r\n    wd.measurement_date is null or wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
           "refId": "A",
           "sql": {
             "columns": [
@@ -515,7 +515,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "stationsname"
+            "displayName": "wind_speed"
           }
         ]
       },
@@ -526,7 +526,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT s.station_id,\r\n      stationsname,\r\n      bundesland,\r\n      wind_speed,\r\n      wind_direction,\r\n      measurement_date\r\nFROM jetstream.wind_data as wd\r\nJoin jetstream.stations as s on wd.station_id = s.station_id\r\nwhere wind_speed > 10 and measurement_date = CURDATE()",
+          "rawSql": "SELECT s.station_id,\r\n      stationsname,\r\n      bundesland,\r\n      wind_speed,\r\n      wind_direction,\r\n      measurement_date\r\nFROM jetstream.wind_data as wd\r\nJoin jetstream.stations as s on wd.station_id = s.station_id\r\nwhere wind_speed >= 10 and date(measurement_date) = curdate()\r\nand wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
           "refId": "A",
           "sql": {
             "columns": [
@@ -553,7 +553,7 @@
           "table": "wind_data"
         }
       ],
-      "title": "All stations with high wind speed today",
+      "title": "All stations today with high wind speed as last data point",
       "type": "table"
     }
   ],
