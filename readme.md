@@ -23,6 +23,7 @@ One solution is to develop an application that retrieves (almost) real-time wind
 
 The DWD regularly collects and updates wind data for approximately 300 cities across Germany and makes this information publicly available through its Open Data initiative. By utilizing this open-source data, the application would allow users to access reliable and up-to-date wind information for informed decision-making. Additionally, over time, the data could be analyzed to improve predictive models, contributing to more accurate forecasting and better preparedness for extreme weather events.
 
+<div style="page-break-after: always"></div>
 
 ## Architecture
 ![Architecture](img/architecture.drawio.svg)
@@ -39,6 +40,7 @@ The downloaded and sent data contain lines in a csv format, always containing th
 STATIONS_ID;MESS_DATUM;QN_3;F;D;eor
 2667;2024121803;1;5.0;130;eor
 ```
+<div style="page-break-after: always"></div>
 
 The quality niveau is described by the DWD as following (see [Description of wind data](https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/wind/BESCHREIBUNG_obsgermany_climate_10min_wind_de.pdf)):
 - QN = 1 : only formal inspection;
@@ -62,6 +64,8 @@ First, the streams are converted into the correct format (conversion of the JSON
 Finally, the converted weather and station data are stored in the corresponding staging tables in MariaDB for further use.  
 The converted weather data is also displayed on the console to provide an overview of whether processing is running or not.
 
+<div style="page-break-after: always"></div>
+
 ### MariaDB as central storage
 MariaDB is used for central storage. When MariaDB is initially started, all necessary databases, tables, procedures and events are created via an [init file](db/init.sql) if they do not already exist.  
 - The `stations` table contains all the information on the weather stations from the description file:  
@@ -81,12 +85,13 @@ MariaDB is used for central storage. When MariaDB is initially started, all nece
   station_id bigint not null,
   measurement_date timestamp not null,
   quality_level tinyint,
-  wind_speed double comment 'Windgeschwindigkeit in m/s', 
-  wind_direction smallint comment 'Windrichtung in Grad'
-  ```
+  wind_speed double comment 'wind speed in m/s', 
+  wind_direction smallint comment 'wind direction in degree'
+  ``` 
 
 All tables have corresponding staging tables, since the data can be corrected after some time by the DWD. Those corrections would be inserted in the next iteration but fail on the insert because of the primary key constraints on the database.  
 Therefore, a staging area is implemented containing no constraints. A procedure is run on the database regularly (every 5 seconds) transferring the staged data to the production tables, performing an upsert operation for colliding rows:
+
 ```sql
 begin
     -- Transfer and upsert stations
@@ -145,6 +150,7 @@ end;
 ### PHPMyAdmin as web view for MariaDB
 In order to be able to view the stored data, PHPMyAdmin is available on port [`8090`](http://localhost:8090).
 
+<div style="page-break-after: always"></div>
 
 ### Grafana for monitoring
 Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed on port [`3000`](http://localhost:3000). The default username and password is `jetstream`. The default dashboard `Jetstream` can now be selected under Dashboards on the left-hand side.
@@ -153,17 +159,21 @@ Grafana is used to create dashboards. A custom dashboard is selected by default,
 
 The following data are displayed here - reacting responsively to the time range selection on the top:
 
-- **Amount of stations in time range:** Shows the amount of all stations saved in the database
-- **Amount of datasets in time range:** Shows the amount of wind data entries for all stations
-- **Amount of entries over time:** Shows a time series of the amount of wind data entries for all stations
-- **Last wind speed per station:** Displays a GeoMap containing all stations. The stations are color-coded according to wind speed and oriented according to the wind direction
-- **Average wind speed:** Shows a time series of the average wind speed for all stations
-- **All stations today with high wind speed as last data point:** Shows the last wind speed for all stations which have a wind speed over 10 as their last data point (but only if the last data point is today)
+| **Feature** | **Description** |
+|---|---|
+| **Amount of stations in time range** | Shows the amount of all stations saved in the database |
+| **Amount of datasets in time range**| Shows the amount of wind data entries for all stations |
+| **Amount of entries over time** | Shows a time series of the amount of wind data entries for all stations |
+| **Last wind speed per station** | Displays a GeoMap containing all stations. The stations are color-coded according to wind speed and oriented according to the wind direction |
+| **Average wind speed** | Shows a time series of the average wind speed for all stations |
+| **All stations today with high wind speed as last data point** | Shows the last wind speed for all stations which have a wind speed over 10 as their last data point (but only if the last data point is today) |
+
 
 ![Graphana Dasboard](img/grafana_dashboard.png)
 
 Of course, the data are changed live as soon as new data are available in the database. This happens approximately every 30 minutes because of the update cycle of the DWD.
 
+<div style="page-break-after: always"></div>
 
 ## Development
 - Build + create container: `docker-compose build --no-cache; docker-compose up -d`
