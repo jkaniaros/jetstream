@@ -181,6 +181,6 @@ MariaDB:
 - Queries: `select * from wind_data;`
 
 ## Screencast
-In the screencast all functionalities and features are shown: [Link to screencast](https://youtu.be/yBl7Z202REg)
+In the screencast all functionalities and features are shown: [Link to German screencast](https://youtu.be/FXiF89BOpgM)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/yBl7Z202REg?si=zecdk0me74TFCWlM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FXiF89BOpgM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

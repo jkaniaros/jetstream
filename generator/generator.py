@@ -26,7 +26,7 @@ TOPIC_KEY_REGEX = r"_(\d+)\.txt$"
 KAFKA_DESCRIPTION_TOPIC = "jetstream-description"
 
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER")
-print(f"Kafka Broker connected: {KAFKA_BROKER}")
+print(f"Kafka Broker: {KAFKA_BROKER}")
 
 LOOP_WAIT_TIME = 30  # Time to wait between iterations (in seconds)
 

@@ -316,10 +316,10 @@ spark-warehouse/
 pyvenv.cfg
 pip-selfcheck.json
 
+# End of https://www.toptal.com/developers/gitignore/api/macos,python,venv,spark
+
 /tmp
 /data
-/db/mariadb-data
-
 jetstream.yml
-
-# End of https://www.toptal.com/developers/gitignore/api/macos,python,venv,spark
+screencast.mov
+.gitignore
