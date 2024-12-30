@@ -3,33 +3,32 @@ use jetstream;
 
 --drop table if exists stations;
 --drop table if exists wind_data;
---drop table if exists wind_agg
 
 -- ensure production and staging tables exist
 create table if not exists stations (
     station_id bigint not null,
-    von_datum timestamp not null,
-    bis_datum timestamp not null,
-    stationshoehe smallint, 
-    geobreite double,
-    geolaenge double,
-    stationsname text,
-    bundesland text,
-    abgabe text,
+    date_from timestamp not null,
+    date_until timestamp not null,
+    height smallint, 
+    latitude double,
+    longitude double,
+    name text,
+    state text,
+    delivery text,
     primary key (station_id),
     index idx_station (station_id)
 );
 
 create table if not exists stations_staging (
     station_id bigint not null,
-    von_datum timestamp not null,
-    bis_datum timestamp not null,
-    stationshoehe smallint, 
-    geobreite double,
-    geolaenge double,
-    stationsname text,
-    bundesland text,
-    abgabe text,
+    date_from timestamp not null,
+    date_until timestamp not null,
+    height smallint, 
+    latitude double,
+    longitude double,
+    name text,
+    state text,
+    delivery text,
     index idx_station (station_id)
 );
 
@@ -60,37 +59,23 @@ create table if not exists wind_data_staging (
     index idx_date (measurement_date)
 );
 
--- create table if not exists wind_agg (
---     id bigint not null auto_increment,
---     station_id bigint not null,
---     start_time timestamp not null,
---     end_time timestamp not null,
---     avg_wind_speed double,
---     avg_wind_direction smallint,
---     primary key (id),
---     index idx_station (station_id),
---     index idx_start_date (start_time),
---     index idx_end_date (end_Time),
---     unique (station_id, start_time, end_time)
--- );
-
 -- create a procedure to transfer data from staging to production
 delimiter $$
 create procedure TransferStagingToProduction()
 begin
-    -- Transfer and upsert for wind_data
-    insert into stations (station_id, von_datum, bis_datum, stationshoehe, geobreite, geolaenge, stationsname, bundesland, abgabe)
-    select s.station_id, s.von_datum, s.bis_datum, s.stationshoehe, s.geobreite, s.geolaenge, s.stationsname, s.bundesland, s.abgabe
+    -- Transfer and upsert stations
+    insert into stations (station_id, date_from, date_until, height, latitude, longitude, name, state, delivery)
+    select s.station_id, s.date_from, s.date_until, s.height, s.latitude, s.longitude, s.name, s.state, s.delivery
     from stations_staging s
     on duplicate key update 
-        von_datum = values(von_datum),
-        bis_datum = values(bis_datum),
-        stationshoehe = values(stationshoehe),
-        geobreite = values(geobreite),
-        geolaenge = values(geolaenge),
-        stationsname = values(stationsname),
-        bundesland = values(bundesland),
-        abgabe = values(abgabe);
+        date_from = values(date_from),
+        date_until = values(date_until),
+        height = values(height),
+        latitude = values(latitude),
+        longitude = values(longitude),
+        name = values(name),
+        state = values(state),
+        delivery = values(delivery);
 
     -- Delete transferred rows from staging table
     delete from stations_staging ss
@@ -98,17 +83,17 @@ begin
         select *
         from stations s
         where s.station_id = ss.station_id
-          and s.von_datum = ss.von_datum
-          and s.bis_datum = ss.bis_datum
-          and s.stationshoehe = ss.stationshoehe
-          and s.geobreite = ss.geobreite
-          and s.geolaenge = ss.geolaenge
-          and s.stationsname = ss.stationsname
-          and s.bundesland = ss.bundesland
-          and s.abgabe = ss.abgabe
+          and s.date_from = ss.date_from
+          and s.date_until = ss.date_until
+          and s.height = ss.height
+          and s.latitude = ss.latitude
+          and s.longitude = ss.longitude
+          and s.name = ss.name
+          and s.state = ss.state
+          and s.delivery = ss.delivery
     );
 
-    -- Transfer and upsert for wind_data
+    -- Transfer and upsert wind_data
     insert into wind_data (station_id, measurement_date, quality_level, wind_speed, wind_direction)
     select w.station_id, w.measurement_date, w.quality_level, w.wind_speed, w.wind_direction
     from wind_data_staging w

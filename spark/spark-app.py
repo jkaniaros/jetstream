@@ -88,15 +88,15 @@ parsed_description_stream = kafka_description_stream.selectExpr("cast(value as s
     .withColumn("parsed", split(col("value"), r"\s+")) \
     .select(
         col("parsed")[0].cast(IntegerType()).alias("station_id"),
-        to_date(col("parsed")[1].cast(StringType()), "yyyyMMdd").alias("von_datum"),
-        to_date(col("parsed")[2].cast(StringType()), "yyyyMMdd").alias("bis_datum"),
-        col("parsed")[3].cast(IntegerType()).alias("stationshoehe"),
-        col("parsed")[4].cast(DoubleType()).alias("geoBreite"),
-        col("parsed")[5].cast(DoubleType()).alias("geoLaenge"),
-        # collect all words except for the last 2 (bundesland, abgabe) and add them back together
-        concat_ws(" ", expr("slice(parsed, 7, size(parsed) - 8)")).alias("stationsname"),
-        col("parsed")[expr("size(parsed) - 2")].cast(StringType()).alias("bundesland"), # doesn't have whitespaces
-        col("parsed")[expr("size(parsed) - 1")].cast(StringType()).alias("abgabe") # doesn't seem to have whitespaces
+        to_date(col("parsed")[1].cast(StringType()), "yyyyMMdd").alias("date_from"),
+        to_date(col("parsed")[2].cast(StringType()), "yyyyMMdd").alias("date_until"),
+        col("parsed")[3].cast(IntegerType()).alias("height"),
+        col("parsed")[4].cast(DoubleType()).alias("latitude"),
+        col("parsed")[5].cast(DoubleType()).alias("longitude"),
+        # collect all words except for the last 2 (state, delivery) and add them back together
+        concat_ws(" ", expr("slice(parsed, 7, size(parsed) - 8)")).alias("name"),
+        col("parsed")[expr("size(parsed) - 2")].cast(StringType()).alias("state"), # doesn't have whitespaces
+        col("parsed")[expr("size(parsed) - 1")].cast(StringType()).alias("delivery") # doesn't seem to have whitespaces
     ) \
     .filter(col("station_id").isNotNull())
 

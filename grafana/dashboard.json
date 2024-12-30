@@ -157,10 +157,8 @@
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "count"
-          ],
-          "fields": "",
+          "calcs": [],
+          "fields": "/^count_filtered$/",
           "values": false
         },
         "showThresholdLabels": false,
@@ -171,18 +169,53 @@
       "targets": [
         {
           "dataset": "jetstream",
+          "datasource": {
+            "type": "mysql",
+            "uid": "P2ABB19EC46770D68"
+          },
           "editorMode": "code",
           "format": "table",
+          "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT station_id\nFROM jetstream.wind_data\nwhere measurement_date between $__timeFrom() and $__timeTo()",
+          "rawSql": "SELECT COUNT(*) as count_all FROM jetstream.wind_data",
           "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "jetstream",
+          "datasource": {
+            "type": "mysql",
+            "uid": "P2ABB19EC46770D68"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) count_filtered FROM jetstream.wind_data where measurement_date between $__timeFrom() and $__timeTo() ",
+          "refId": "B",
           "sql": {
             "columns": [
               {
                 "name": "COUNT",
                 "parameters": [
                   {
-                    "name": "station_id",
+                    "name": "*",
                     "type": "functionParameter"
                   }
                 ],
@@ -197,9 +230,40 @@
                 "type": "groupBy"
               }
             ],
-            "limit": 50
+            "limit": null,
+            "whereJsonTree": {
+              "children1": [
+                {
+                  "id": "b9abaa9b-cdef-4012-b456-719418145295",
+                  "properties": {
+                    "field": "measurement_date",
+                    "fieldSrc": "field",
+                    "operator": "between",
+                    "value": [
+                      "2024-12-30 15:59:45",
+                      null
+                    ],
+                    "valueError": [
+                      null,
+                      null
+                    ],
+                    "valueSrc": [
+                      "value",
+                      "value"
+                    ],
+                    "valueType": [
+                      "datetime",
+                      "datetime"
+                    ]
+                  },
+                  "type": "rule"
+                }
+              ],
+              "id": "99baa898-0123-4456-b89a-b19417fcf81f",
+              "type": "group"
+            }
           },
-          "table": "stations"
+          "table": "wind_data"
         }
       ],
       "title": "Amount of datasets in time range",
@@ -328,7 +392,7 @@
           "table": "wind_data"
         }
       ],
-      "title": "Count of entries per hour",
+      "title": "Amount of entries over time",
       "type": "timeseries"
     },
     {
@@ -490,7 +554,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n    s.station_id AS ID,\r\n    s.stationsname AS Stationsname,\r\n    s.geolaenge AS Longitude,\r\n    s.geobreite AS Latitude,\r\n    wd.wind_speed,\r\n    wd.wind_direction as wind_direction_from,\r\n    (wd.wind_direction + 180) mod 360 as wind_direction_to,\r\n    wd.measurement_date\r\nFROM\r\n    jetstream.stations AS s\r\nleft JOIN\r\n    jetstream.wind_data AS wd ON s.station_id = wd.station_id\r\nWHERE\r\n    wd.measurement_date is null or wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
+          "rawSql": "SELECT\r\n    s.station_id AS ID,\r\n    s.name AS name,\r\n    s.longitude,\r\n    s.latitude,\r\n    wd.wind_speed,\r\n    wd.wind_direction as wind_direction_from,\r\n    (wd.wind_direction + 180) mod 360 as wind_direction_to,\r\n    wd.measurement_date\r\nFROM\r\n    jetstream.stations AS s\r\nleft JOIN\r\n    jetstream.wind_data AS wd ON s.station_id = wd.station_id\r\nWHERE\r\n    wd.measurement_date is null or wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
           "refId": "A",
           "sql": {
             "columns": [
@@ -506,7 +570,7 @@
               {
                 "parameters": [
                   {
-                    "name": "geolaenge",
+                    "name": "longitude",
                     "type": "functionParameter"
                   }
                 ],
@@ -515,7 +579,7 @@
               {
                 "parameters": [
                   {
-                    "name": "geobreite",
+                    "name": "latitude",
                     "type": "functionParameter"
                   }
                 ],
@@ -837,7 +901,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT s.station_id,\r\n      stationsname,\r\n      bundesland,\r\n      wind_speed,\r\n      wind_direction,\r\n      measurement_date\r\nFROM jetstream.wind_data as wd\r\nJoin jetstream.stations as s on wd.station_id = s.station_id\r\nwhere wind_speed >= 10 and date(measurement_date) = curdate()\r\nand wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
+          "rawSql": "SELECT s.station_id,\r\n      name,\r\n      state,\r\n      wind_speed,\r\n      wind_direction,\r\n      measurement_date\r\nFROM jetstream.wind_data as wd\r\nJoin jetstream.stations as s on wd.station_id = s.station_id\r\nwhere wind_speed >= 10 and date(measurement_date) = curdate()\r\nand wd.measurement_date = (\r\n        SELECT MAX(wd2.measurement_date)\r\n        FROM jetstream.wind_data AS wd2\r\n        WHERE wd2.station_id = wd.station_id\r\n    )",
           "refId": "A",
           "sql": {
             "columns": [
