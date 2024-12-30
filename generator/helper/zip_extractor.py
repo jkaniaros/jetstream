@@ -16,7 +16,7 @@ def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_fol
     if not os.path.exists(zip_filepath):
         return
 
-    # Create output folder if it doesn"t exist
+    # Create output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -34,7 +34,7 @@ def extract_file_from_zip(zip_filepath: str, extract_file_regex: str, output_fol
                 zip_ref.extract(file, output_folder)
                 print(f"Extracted: {file} to {output_folder}")
 
-def extract_all_product_txt_files(in_folder: str, extract_file_regex: str, out_folder: str):
+def extract_zips_by_regex(in_folder: str, extract_file_regex: str, out_folder: str):
     """
     Function to search all zip archives in a given folder for files specified by regex.
 

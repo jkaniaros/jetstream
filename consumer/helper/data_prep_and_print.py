@@ -33,7 +33,6 @@ def add_weight_col(dataframe, label_col='label', weight_col_name='classWeightCol
 
 def print_confusion_matrix(spark, conf_matrix):
   """pretty printing the confusion matrix in the common format Row=Prediction Column=Label"""
-  #print (list(map(list, zip(*conf_matrix.toArray().tolist()))))
   col_name_count = 0
   df_conf = spark.createDataFrame(list(map(list, zip(*conf_matrix.toArray().tolist()))))
   for col_name in df_conf.columns.copy():

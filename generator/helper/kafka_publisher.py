@@ -126,14 +126,14 @@ def publish_folder(folder: str, broker: str, topic: str, key_regex: str, archive
 
 def publish_file(filepath: str, broker: str, topic: str, key: str = None, archive_folder: str = None):
     """
-    Publish all files from folder to the Kafka broker on the specified topic in the key specified by regex.
+    Publish specified file to the Kafka broker on the specified topic in the key specified by regex.
 
     Parameters:
     filepath (str): The filepath where the file is stored.
     broker (str): The hostname of the Kafka broker.
     topic (str): The topic to publish the information on.
     key (str): The regex string for the key to send on. Default: None.
-    archive_folder (str): The folder to archive the sent line files.
+    archive_folder (str): The folder to archive the sent line file.
     """
     # Return if the file does not exist
     if not os.path.exists(filepath):

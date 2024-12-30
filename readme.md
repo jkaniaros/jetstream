@@ -1,7 +1,7 @@
 # Jetstream - German Wind Data Collector
 
 > Laborarbeit Big Data Engineering WiSe 2024/2025  
-> Jannis Kaniaros & Fabian Lohmüller (8175324)
+> Jannis Kaniaros (5934448) & Fabian Lohmüller (8175324)
 
 - [Jetstream - German Wind Data Collector](#jetstream---german-wind-data-collector)
   - [Idea](#idea)
@@ -51,8 +51,8 @@ An Apache Kafka broker is used in the cluster as a central message queue. Two to
 For reasons of simplicity, no replication is used for the Kafka Broker. The log files are also deleted after 1 gigabyte so that the disk space of the host machine is not overfilled or configuration adjustments (e.g. maximum hard disk space used) are necessary for docker.
 
 ### Apache Spark for Data Preparation
-Apache Spark is used as the central technology for data processing. A Spark master and two Spark workers are first created in the cluster for this purpose. The Bitnami Spark image is used for this.  
-The master information is shown on port [`8080`](http://localhost:8080), whereas the worker information are shown on ports [`8081`](http://localhost:8081) and [`8082`](http://localhost:8082).
+Apache Spark is used as the central technology for data processing. A Spark master and two Spark workers are first created in the cluster for this purpose. The Bitnami Spark image is used for this. The [`docker-compose.yml`](docker-compose.yml) file is currently configured to support up to 9 workers. Additional workers require changes in the `replicas` field and range adjustments in `ports`.   
+The master information is shown on port [`8080`](http://localhost:8080), whereas the worker information are shown on the ports specified in the [`docker-compose.yml`](docker-compose.yml). The default port range spans up from [`8081`](http://localhost:8081) to [`8089`](http://localhost:8089).
 
 The Bitnami Spark image is also used as the base image for the Spark application, although adjustments still need to be made to make the combination of Spark, Kafka and MariaDB executable.  
 For this purpose, dependencies are downloaded as JAR files and stored in the `/opt/bitnami/spark/jars/` folder of the `spark-app` container. After installing the Python dependencies, the application file can then be transferred via `spark-submit` and passed to the Spark workers for processing.

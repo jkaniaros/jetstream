@@ -4,7 +4,7 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
 
-# Function to write Kafka messages to MariaDB
+# Function to write Kafka micro batches to MariaDB
 def write_to_mariadb(batch_df, epoch_id, table):
     jdbc_url = "jdbc:mysql://mariadb:3306/jetstream"
 
@@ -14,8 +14,7 @@ def write_to_mariadb(batch_df, epoch_id, table):
         "driver": "com.mysql.cj.jdbc.Driver"
     }
 
-    # Write everything to the staging table,
-        # because sometimes data gets corrected afterwards by DWD causing duplicate errors for primary keys
+    # Write everything to the staging table, because sometimes data gets corrected afterwards by DWD causing duplicate errors for primary keys
     table = f"{table}_staging"
 
     try:
@@ -41,12 +40,12 @@ spark = SparkSession.builder \
 # Set Spark logging level to WARN
 spark.sparkContext.setLogLevel("WARN")
 
-# Get Kafka broker from env variable
+# Get Kafka broker from env var
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER")
 
 #################### Read from Kafka ####################
 # Start from earliest offset (either from beginning or from latest commit)
-kafka_stream = spark.readStream \
+jetstream = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("subscribe", "jetstream") \
@@ -54,7 +53,7 @@ kafka_stream = spark.readStream \
     .option("checkpointLocation", "/tmp/kafka_stream_checkpoint") \
     .load()
 
-kafka_description_stream = spark.readStream \
+jetstream_description = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("subscribe", "jetstream-description") \
@@ -71,7 +70,7 @@ kafka_description_stream = spark.readStream \
 # Remove faulty data
 
 # Wind data
-parsed_stream = kafka_stream.selectExpr("cast(value as string)") \
+jetstream_parsed = jetstream.selectExpr("cast(value as string)") \
     .withColumn("parsed", split(col("value"), ";")) \
     .select(
         col("parsed")[0].cast(IntegerType()).alias("station_id"),
@@ -84,7 +83,7 @@ parsed_stream = kafka_stream.selectExpr("cast(value as string)") \
     .filter(col("wind_speed") >= 0)
 
 # Station description
-parsed_description_stream = kafka_description_stream.selectExpr("cast(value as string)") \
+jetstream_description_parsed = jetstream_description.selectExpr("cast(value as string)") \
     .withColumn("parsed", split(col("value"), r"\s+")) \
     .select(
         col("parsed")[0].cast(IntegerType()).alias("station_id"),
@@ -103,25 +102,25 @@ parsed_description_stream = kafka_description_stream.selectExpr("cast(value as s
 
 #################### Write to MariaDB ####################
 
-mariadb_query = parsed_stream.writeStream \
+mariadb_wind_data = jetstream_parsed.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_data")) \
     .outputMode("update") \
-    .option("checkpointLocation", "/tmp/parsed_stream_checkpoint") \
+    .option("checkpointLocation", "/tmp/jetstream_parsed_checkpoint") \
     .trigger(processingTime="1 second") \
     .start()
     # continuous trigger doesn't seem to work...
 
-mariadb_query_stations = parsed_description_stream.writeStream \
+mariadb_stations = jetstream_description_parsed.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "stations")) \
     .outputMode("update") \
-    .option("checkpointLocation", "/tmp/parsed_description_stream_checkpoint") \
+    .option("checkpointLocation", "/tmp/jetstream_description_parsed_checkpoint") \
     .trigger(processingTime="1 second") \
     .start()
     # continuous trigger doesn't seem to work...
 
 #################### Write processed data to console ####################
 
-console_query = parsed_stream.writeStream \
+console_query = jetstream_parsed.writeStream \
     .outputMode("append") \
     .format("console") \
     .option("truncate", "false") \

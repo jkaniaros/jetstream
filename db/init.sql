@@ -36,11 +36,11 @@ create table if not exists wind_data (
     station_id bigint not null,
     measurement_date timestamp not null,
     quality_level tinyint comment '
-        qn = 1 : nur formale prüfung;
-        qn = 2 : nach individuellen kriterien geprüft;
-        qn = 3 : automatische prüfung und korrektur.',
-    wind_speed double comment 'windgeschwindigkeit in m/s', 
-    wind_direction smallint comment 'windrichtung in grad',
+        QN = 1 : only formal inspection;
+        QN = 2 : checked according to individual criteria;
+        QN = 3 : automatic checking and correction.',
+    wind_speed double comment 'wind speed in m/s', 
+    wind_direction smallint comment 'wind direction in degree',
     primary key (station_id, measurement_date),
     index idx_station (station_id),
     index idx_date (measurement_date)
@@ -50,11 +50,11 @@ create table if not exists wind_data_staging (
     station_id bigint not null,
     measurement_date timestamp not null,
     quality_level tinyint comment '
-        qn = 1 : nur formale prüfung;
-        qn = 2 : nach individuellen kriterien geprüft;
-        qn = 3 : automatische prüfung und korrektur.',
-    wind_speed double comment 'windgeschwindigkeit in m/s', 
-    wind_direction smallint comment 'windrichtung in grad',
+        QN = 1 : only formal inspection;
+        QN = 2 : checked according to individual criteria;
+        QN = 3 : automatic checking and correction.',
+    wind_speed double comment 'wind speed in m/s', 
+    wind_direction smallint comment 'wind direction in degree',
     index idx_station (station_id),
     index idx_date (measurement_date)
 );

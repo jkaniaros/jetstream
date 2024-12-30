@@ -4,7 +4,7 @@ import os
 def merge_files_by_regex(in_folder: str, out_folder: str, regex: str, archive_folder: str):
     """
     Function to merge files specified by regex in a given folder into a given output folder.
-    Checks for an archive file and only merges lines not already in the archive.
+    Checks for an archive file and only merges lines not present in the archive.
 
     Parameters:
     in_folder (str): The folder where the single files are stored.

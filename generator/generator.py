@@ -2,19 +2,17 @@ import shutil
 import os
 import time
 from helper.file_downloader import download_all_files
-from helper.zip_extractor import extract_all_product_txt_files
+from helper.zip_extractor import extract_zips_by_regex
 from helper.kafka_publisher import publish_folder, create_topic, publish_file
 from helper.file_merge import merge_files_by_regex
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka import KafkaClient
 
 # Download URL of the DWDs for 10-minutely wind data, which is updated probably every 30 minutes and contains data from 1 day
-DOWNLOAD_URL = "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/wind/now/" 
-# "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/wind/recent/"
-
+DOWNLOAD_URL = "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/10_minutes/wind/now/"
 
 # File in the weather station zip file that contains the wind data. The rest only has metadata
-EXTRACT_REGEX = r"^produkt_zehn_now_ff_.*.txt$" # r"^produkt_ff_stunde_\w*\.txt$"
+EXTRACT_REGEX = r"^produkt_zehn_now_ff_.*.txt$"
 
 DOWNLOAD_FOLDER = os.path.join("tmp", "downloaded")
 EXTRACTED_FOLDER = os.path.join("tmp", "extracted")
@@ -26,10 +24,9 @@ DESCRIPTION_FILE = "zehn_now_ff_Beschreibung_Stationen.txt"
 KAFKA_TOPIC = "jetstream"
 TOPIC_KEY_REGEX = r"_(\d+)\.txt$"
 KAFKA_DESCRIPTION_TOPIC = "jetstream-description"
-# "FF_Stundenwerte_Beschreibung_Stationen.txt"
 
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER")
-print(f"Kafka Broker: {KAFKA_BROKER}")
+print(f"Kafka Broker connected: {KAFKA_BROKER}")
 
 LOOP_WAIT_TIME = 30  # Time to wait between iterations (in seconds)
 
@@ -40,19 +37,18 @@ def run():
     """
     max_run_ts = None  # Start with no timestamp
 
-    # Create topics if they don't exist, so that the spark applications don't crash because of missing topics
+    # Create topics if they don't exist, so that the spark application don't crash because of missing topics
     create_topic(KAFKA_TOPIC, KAFKA_BROKER)
     create_topic(KAFKA_DESCRIPTION_TOPIC, KAFKA_BROKER)
-
 
     x = 0
     while True:
         x+=1
-        print(f"{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}: Stating iteration {x}:")
+        print(f"{time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}: Starting iteration {x}:")
 
-        # Download zip files from DWD and extract the relevant txt files
+        # Download zip files from DWD and extract the relevant txt files. Save max timestamp for next iteration to avoid duplicates
         _, max_run_ts = download_all_files(DOWNLOAD_URL, DOWNLOAD_FOLDER, max_run_ts)
-        extract_all_product_txt_files(DOWNLOAD_FOLDER, EXTRACT_REGEX, EXTRACTED_FOLDER)
+        extract_zips_by_regex(DOWNLOAD_FOLDER, EXTRACT_REGEX, EXTRACTED_FOLDER)
 
         # If a station description file exists, copy it to the extracted folder too
         if os.path.exists(os.path.join(DOWNLOAD_FOLDER, DESCRIPTION_FILE)):
@@ -66,10 +62,10 @@ def run():
         # Merge all txt files for one station into one single file in the merge folder
         merge_files_by_regex(EXTRACTED_FOLDER, MERGED_FOLDER, TOPIC_KEY_REGEX, ARCHIVED_FOLDER)
 
-        # Publish all extracted files to Kafka
+        # Publish all files in merge folder to Kafka
         publish_folder(MERGED_FOLDER, KAFKA_BROKER, KAFKA_TOPIC, TOPIC_KEY_REGEX, ARCHIVED_FOLDER)
 
-        # Remove the temporary folders, except for archive
+        # Remove the temporary folders, except for archive (for deduplication)
         if os.path.exists(DOWNLOAD_FOLDER):
             shutil.rmtree(DOWNLOAD_FOLDER)
         if os.path.exists(EXTRACTED_FOLDER):

@@ -17,7 +17,7 @@ services:
       KAFKA_NUM_PARTITIONS: 3
       KAFKA_LOG_RETENTION_BYTES: 1000000000 # delete logs every 1 GB
     # volumes:
-    #   - ./data/kafka-data:/var/lib/kafka/data
+    #   - kafka-data:/var/lib/kafka/data # Persistent Volume for Kafka
     ports:
       - 9092:9092
 
@@ -37,23 +37,15 @@ services:
       - spark-master
       - kafka-broker
     ports:
-      - "8081:8081"
+      - "8081-8089:8081" # with this port-range up to 9 replicas 
     environment:
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://spark-master:7077
       KAFKA_BROKER: kafka-broker:9092
-  
-  spark-worker-2:
-    image: bitnami/spark:3.5.3
-    depends_on:
-      - spark-master
-      - kafka-broker
-    ports:
-      - "8082:8081"
-    environment:
-      SPARK_MODE: worker
-      SPARK_MASTER_URL: spark://spark-master:7077
-      KAFKA_BROKER: kafka-broker:9092
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
 
   spark-app:
     build:
@@ -98,8 +90,6 @@ services:
       context: ./generator
     depends_on:
       - kafka-broker
-      - spark-master
-      - spark-worker
     environment:
       KAFKA_BROKER: kafka-broker:9092
     restart: on-failure
@@ -135,3 +125,5 @@ volumes:
     driver: local
   grafana-data:
     driver: local
+  # kafka-data:
+    # driver: local

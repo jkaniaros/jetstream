@@ -7,7 +7,7 @@ from html.parser import HTMLParser
 class HtmlParser(HTMLParser):
     """
     HTML Parser that handles link entries in the HTML.
-    Saves the URLs in the field `file_links` and tracks the latest update timestamp.
+    Saves the URLs in the field `file_links` and tracks the latest update timestamp in the field `latest_timestamp`.
     """
     def __init__(self, base_url):
         super().__init__()
@@ -28,7 +28,7 @@ class HtmlParser(HTMLParser):
         # Check if the data is a timestamp
         data = data.strip()
         try:
-            # Attempt to parse the first 16 characters of data as a timestamp. Data contains of TS + Size
+            # Attempt to parse the first 16 characters of data as a timestamp. Data consists of timestamp and size
             timestamp = datetime.strptime(data[:17], "%d-%b-%Y %H:%M")
             # Update the maximum timestamp
             if self.latest_timestamp is None or timestamp > self.latest_timestamp:
@@ -62,7 +62,8 @@ def download_file(url: str, folder: str):
 
 def download_all_files(url: str, folder: str, min_timestamp: datetime) -> (int, datetime):
     """
-    Function to download all file found in a specified URL and save them to a folder. Download is only executed, if the maximum timestamp on the page is greater than the provided one.
+    Function to download all files found in a specified URL and save them to a folder.
+    Download is only executed, if the maximum timestamp on the page is greater than the provided one.
 
     Parameters:
     url (str): The URL of the files to download. The files should be found as HTML links.
