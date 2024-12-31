@@ -59,10 +59,32 @@ The master information is shown on port [`8080`](http://localhost:8080), whereas
 The Bitnami Spark image is also used as the base image for the Spark application, although adjustments still need to be made to make the combination of Spark, Kafka and MariaDB executable.  
 For this purpose, dependencies are downloaded as JAR files and stored in the `/opt/bitnami/spark/jars/` folder of the `spark-app` container. After installing the Python dependencies, the application file can then be transferred via `spark-submit` and passed to the Spark workers for processing.
 
-In the Spark application, both Kafka topics described above are read as a stream and processed accordingly.  
-First, the streams are converted into the correct format (conversion of the JSON byte array into CSV, then from CSV into usable columns). Incorrect rows, e.g. null values in the station ID or wind speeds <= 0, are removed.  
-Finally, the converted weather and station data are stored in the corresponding staging tables in MariaDB for further use.  
-The converted weather data is also displayed on the console to provide an overview of whether processing is running or not.
+In the Spark application, both Kafka topics described above are read as a stream and processed as following:
+1. First, the streams are converted into the correct format (conversion of the JSON byte array into CSV, then from CSV into usable columns).  
+  Incorrect rows, e.g. null values in the station ID or wind speeds <= 0, are removed.
+2. Then, a Bucketizer is applied to the data in order to fit the data into bins according to their values. The wind direction is binned into buckets for each 45°:  
+    ```json
+    0: [0;45[
+    1: [45;90[
+    2: [90;135[
+    3: [135;180[
+    4: [180;225[
+    5: [225;270[
+    6: [270;315[
+    7: [315;360[
+    ```  
+    Similarly, the wind speed is binned - but into different buckets: low, medium, heavy and extreme wind:
+    ```json
+    0: [0;5[
+    1: [5;10[
+    2: [10;17[
+    3: [17;inf[
+    ```
+    The bins could be used afterwards for grouping data, performing aggregations, analyses or machine learning operations.
+3. Finally, the converted weather and station data are stored in the corresponding staging tables in MariaDB for further use.
+
+The converted weather data is also displayed regularly (but not as frequent as the processing of the database write streams) on the console to provide an overview of whether processing is running or not. The write streams are displayed as a simple `print` statements:
+![Console output](img/console_output.png)
 
 <div style="page-break-after: always"></div>
 
@@ -80,14 +102,20 @@ MariaDB is used for central storage. When MariaDB is initially started, all nece
   state text,
   delivery text
   ```
+  Example entry:
+  ![Example entry MariaDB](img/mariadb_example_stations.png)
 - The `wind_data` table contains all converted and filtered data. This is where the history is built up:  
   ```sql
   station_id bigint not null,
   measurement_date timestamp not null,
   quality_level tinyint,
   wind_speed double comment 'wind speed in m/s', 
-  wind_direction smallint comment 'wind direction in degree'
-  ``` 
+  wind_direction smallint comment 'wind direction in degree',
+  wind_direction_bucket double comment [...],
+  wind_speed_bucket double comment [...]
+  ```
+  Example entry:
+  ![Example entry MariaDB](img/mariadb_example_wind_data.png)
 
 All tables have corresponding staging tables, since the data can be corrected after some time by the DWD. Those corrections would be inserted in the next iteration but fail on the insert because of the primary key constraints on the database.  
 Therefore, a staging area is implemented containing no constraints. A procedure is run on the database regularly (every 5 seconds) transferring the staged data to the production tables, performing an upsert operation for colliding rows:
@@ -125,13 +153,15 @@ begin
     );
 
     -- Transfer and upsert wind_data
-    insert into wind_data (station_id, measurement_date, quality_level, wind_speed, wind_direction)
-    select w.station_id, w.measurement_date, w.quality_level, w.wind_speed, w.wind_direction
-    from wind_data_staging w
+    insert into wind_data (station_id, measurement_date, quality_level, wind_speed, wind_direction, wind_direction_bucket, wind_speed_bucket)
+    select ws.station_id, ws.measurement_date, ws.quality_level, ws.wind_speed, ws.wind_direction, ws.wind_direction_bucket, ws.wind_speed_bucket
+    from wind_data_staging ws
     on duplicate key update 
         quality_level = values(quality_level),
         wind_speed = values(wind_speed),
-        wind_direction = values(wind_direction);
+        wind_direction = values(wind_direction),
+        wind_direction_bucket = values(wind_direction_bucket),
+        wind_speed_bucket = values(wind_speed_bucket);
 
     -- Delete transferred rows from staging table
     delete from wind_data_staging ws
@@ -143,6 +173,8 @@ begin
           and w.quality_level = ws.quality_level
           and w.wind_speed = ws.wind_speed
           and w.wind_direction = ws.wind_direction
+          and w.wind_direction_bucket = ws.wind_direction_bucket
+          and w.wind_speed_bucket = ws.wind_speed_bucket
     );
 end;
 ```

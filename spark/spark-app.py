@@ -2,6 +2,7 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
+from pyspark.ml.feature import Bucketizer
 
 
 # Function to write Kafka micro batches to MariaDB
@@ -26,7 +27,7 @@ def write_to_mariadb(batch_df, epoch_id, table):
             .options(**connection_properties) \
             .save()
 
-        print(f"Batch with {batch_df.count()} elements successfully saved to database table {table}")
+        print(f"Batch with {batch_df.count()} elements saved to database table {table}")
 
     except Exception as ex:
         print(f"Error writing to table {table} - batch {epoch_id}: {str(ex)}")
@@ -100,12 +101,53 @@ jetstream_description_parsed = jetstream_description.selectExpr("cast(value as s
     .filter(col("station_id").isNotNull())
 
 
+#################### Do some aggregations ####################
+
+# Binning of wind direction
+# Define the splits where the different buckets should start
+wind_direction_splits = [x for x in range(0, 361) if x%45 == 0] # Do a bucket for every 45 degrees
+# Buckets:
+    # 0: [0, 45[
+    # 1: [45, 90[
+    # 2: [90, 135[
+    # 3: [135, 180[
+    # 4: [180, 225[
+    # 5: [225, 270[
+    # 6: [270, 315[
+    # 7: [315, 360[
+wind_dir_bucketizer = Bucketizer(splits=wind_direction_splits, 
+                                 inputCol="wind_direction",
+                                 outputCol="wind_direction_bucket")
+jetstream_bucketized = wind_dir_bucketizer.transform(jetstream_parsed)
+
+
+# Binning of wind speed
+# Define the splits where the different buckets should start
+wind_speed_splits = [0.0, 5.0, 10.0, 17.0, float("inf")] # Do a bucket for every wind speed category (low, medium, heavy, extreme)
+# Buckets:
+    # 0: [0, 5[
+    # 1: [5, 10[
+    # 2: [10, 17[
+    # 3: [17, inf[
+wind_speed_bucketizer = Bucketizer(splits=wind_speed_splits,
+                                   inputCol="wind_speed",
+                                   outputCol="wind_speed_bucket")
+jetstream_bucketized = wind_speed_bucketizer.transform(jetstream_bucketized)
+# jetstream_bucketized:
+    # station_id: int, 
+    # measurement_date: timestamp, 
+    # quality_level: int, 
+    # wind_speed: double, 
+    # wind_direction: int, 
+    # wind_direction_bucket: double, 
+    # wind_speed_bucket: double]
+
 #################### Write to MariaDB ####################
 
-mariadb_wind_data = jetstream_parsed.writeStream \
+mariadb_wind_data = jetstream_bucketized.writeStream \
     .foreachBatch(lambda batch_df, epoch_id: write_to_mariadb(batch_df, epoch_id, "wind_data")) \
     .outputMode("update") \
-    .option("checkpointLocation", "/tmp/jetstream_parsed_checkpoint") \
+    .option("checkpointLocation", "/tmp/jetstream_bucketized_checkpoint") \
     .trigger(processingTime="1 second") \
     .start()
     # continuous trigger doesn't seem to work...
@@ -120,7 +162,7 @@ mariadb_stations = jetstream_description_parsed.writeStream \
 
 #################### Write processed data to console ####################
 
-console_query = jetstream_parsed.writeStream \
+console_query = jetstream_bucketized.writeStream \
     .outputMode("append") \
     .format("console") \
     .option("truncate", "false") \
