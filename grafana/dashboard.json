@@ -116,7 +116,7 @@
           "table": "stations"
         }
       ],
-      "title": "Amount of stations in time range",
+      "title": "Amount of stations",
       "type": "gauge"
     },
     {
@@ -177,7 +177,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as count_all FROM jetstream.wind_data",
+          "rawSql": "SELECT COUNT(*) as count_all \nFROM jetstream.wind_data\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -207,7 +207,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) count_filtered FROM jetstream.wind_data where measurement_date between $__timeFrom() and $__timeTo() ",
+          "rawSql": "SELECT COUNT(*) count_filtered \nFROM jetstream.wind_data \nwhere measurement_date between $__timeFrom() and $__timeTo() \nand ($station = -1 or station_id = $station)",
           "refId": "B",
           "sql": {
             "columns": [
@@ -230,7 +230,6 @@
                 "type": "groupBy"
               }
             ],
-            "limit": null,
             "whereJsonTree": {
               "children1": [
                 {
@@ -266,7 +265,7 @@
           "table": "wind_data"
         }
       ],
-      "title": "Amount of datasets in time range",
+      "title": "Amount of datasets",
       "type": "gauge"
     },
     {
@@ -355,7 +354,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT measurement_date as \"time\", \r\n    COUNT(*) as \"value\" \r\nFROM jetstream.wind_data \r\nGroup by measurement_date",
+          "rawSql": "SELECT measurement_date as \"time\", \r\n    COUNT(*) as \"value\" \r\nFROM jetstream.wind_data \r\nWHERE $station = -1 or station_id = $station  \r\nGroup by measurement_date",
           "refId": "A",
           "sql": {
             "columns": [
@@ -392,7 +391,7 @@
           "table": "wind_data"
         }
       ],
-      "title": "Amount of entries over time",
+      "title": "Amount of entries",
       "type": "timeseries"
     },
     {
@@ -706,10 +705,10 @@
       "targets": [
         {
           "dataset": "jetstream",
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(wind_speed) AS \"value\", measurement_date AS \"time\" FROM jetstream.wind_data GROUP BY measurement_date ",
+          "rawSql": "SELECT AVG(wind_speed) AS \"value\",\n       measurement_date AS \"time\" \nFROM jetstream.wind_data \nWHERE $station = -1 or station_id = $station  \nGROUP BY measurement_date ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -745,10 +744,33 @@
               }
             ],
             "whereJsonTree": {
-              "children1": [],
+              "children1": [
+                {
+                  "id": "b9a8bb8a-cdef-4012-b456-719422e11e3b",
+                  "properties": {
+                    "field": "station_id",
+                    "fieldSrc": "field",
+                    "operator": "equal",
+                    "value": [
+                      ""
+                    ],
+                    "valueError": [
+                      null
+                    ],
+                    "valueSrc": [
+                      "value"
+                    ],
+                    "valueType": [
+                      "text"
+                    ]
+                  },
+                  "type": "rule"
+                }
+              ],
               "id": "ba888aaa-0123-4456-b89a-b194171f6063",
               "type": "group"
-            }
+            },
+            "whereString": "station_id = ''"
           },
           "table": "wind_data"
         }
@@ -930,6 +952,211 @@
       ],
       "title": "All stations today with high wind speed as last data point",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "P2ABB19EC46770D68"
+      },
+      "description": "0: [0;5[  \n1: [5;10[  \n2: [10;17[  \n3: [17;inf[  ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "fillOpacity": 48,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 2,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "displayName": "Wind speed bucket",
+          "fieldMinMax": false,
+          "mappings": [],
+          "max": 4,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "id": 9,
+      "options": {
+        "bucketCount": 4,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "dataset": "jetstream",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT wind_speed_bucket\nFROM jetstream.wind_data\nwhere measurement_date between $__timeFrom() and $__timeTo() \n  and ($station = -1 or station_id = $station)",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "COUNT",
+                "parameters": [
+                  {
+                    "name": "wind_speed_bucket",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "name": "wind_speed_bucket",
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "wind_data"
+        }
+      ],
+      "title": "Wind speed histogram",
+      "type": "histogram"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "P2ABB19EC46770D68"
+      },
+      "description": "0: [0;45[  \n1: [45;90[  \n2: [90;135[  \n3: [135;180[  \n4: [180;225[  \n5: [225;270[  \n6: [270;315[  \n7: [315;360[  ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 2,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "displayName": "Wind direction bucket",
+          "fieldMinMax": false,
+          "mappings": [],
+          "max": 8,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "id": 10,
+      "options": {
+        "bucketCount": 8,
+        "combine": false,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "dataset": "jetstream",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT wind_direction_bucket\nFROM jetstream.wind_data\nwhere measurement_date between $__timeFrom() and $__timeTo() \n  and ($station = -1 or station_id = $station)",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "name": "COUNT",
+                "parameters": [
+                  {
+                    "name": "wind_speed_bucket",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "name": "wind_speed_bucket",
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "wind_data"
+        }
+      ],
+      "title": "Wind direction histogram",
+      "type": "histogram"
     }
   ],
   "preload": false,
@@ -937,7 +1164,23 @@
   "schemaVersion": 40,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": "-1",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "definition": "select station_id from stations",
+        "includeAll": true,
+        "name": "station",
+        "options": [],
+        "query": "select station_id from stations",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now/d",

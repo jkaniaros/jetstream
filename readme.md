@@ -12,8 +12,8 @@
     - [MariaDB as central storage](#mariadb-as-central-storage)
     - [PHPMyAdmin as web view for MariaDB](#phpmyadmin-as-web-view-for-mariadb)
     - [Grafana for monitoring](#grafana-for-monitoring)
-  - [Development](#development)
   - [Screencast](#screencast)
+  - [Helpful commands](#helpful-commands)
 
 
 ## Idea
@@ -187,27 +187,35 @@ In order to be able to view the stored data, PHPMyAdmin is available on port [`8
 ### Grafana for monitoring
 Grafana is used to create dashboards. A custom dashboard is selected by default, which can display various data. Grafana can be accessed on port [`3000`](http://localhost:3000). The default username and password is `jetstream`. The default dashboard `Jetstream` can now be selected under Dashboards on the left-hand side.
 
-![Grafana Dashboards](img/grafana_dashboards.png)
+<img width=80% keepaspectratio src="img/grafana_dashboards.png">
 
-The following data are displayed here - reacting responsively to the time range selection on the top:
+The following data are displayed - reacting responsively to the time range and station id selection on the top of the dashboard:
 
 | **Feature** | **Description** |
 |---|---|
-| **Amount of stations in time range** | Shows the amount of all stations saved in the database |
-| **Amount of datasets in time range**| Shows the amount of wind data entries for all stations |
-| **Amount of entries over time** | Shows a time series of the amount of wind data entries for all stations |
+| **Amount of stations** | Shows the amount of all stations saved in the database for the given time range |
+| **Amount of datasets**| Shows the amount of wind data entries for all stations or for the specified one for the given time range |
+| **Amount of entries** | Shows a time series of the amount of wind data entries for all stations or for the specified one for the given time range |
 | **Last wind speed per station** | Displays a GeoMap containing all stations. The stations are color-coded according to wind speed and oriented according to the wind direction |
-| **Average wind speed** | Shows a time series of the average wind speed for all stations |
+| **Average wind speed** | Shows a time series of the average wind speed for all stations in the given time range |
 | **All stations today with high wind speed as last data point** | Shows the last wind speed for all stations which have a wind speed over 10 as their last data point (but only if the last data point is today) |
+| **Wind speed histogram** | Shows a histogram for the wind speed in the specified time range for all stations or the specified one |
+| **Wind direction histogram** | Shows a histogram for the wind direction in the specified time range for all stations or the specified one |
 
 
-![Graphana Dasboard](img/grafana_dashboard.png)
+![Grafana Dasboard](img/grafana_dashboard.png)
+![Grafana Dasboard Histogramme](img/grafana_dashboard_histograms.png)
 
 Of course, the data are changed live as soon as new data are available in the database. This happens approximately every 30 minutes because of the update cycle of the DWD.
 
 <div style="page-break-after: always"></div>
 
-## Development
+## Screencast
+In the screencast all functionalities and features are shown: [Link to German screencast](https://youtu.be/FXiF89BOpgM)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FXiF89BOpgM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Helpful commands
 - Build + create container: `docker-compose build --no-cache; docker-compose up -d`
 - Remove everything: `docker-compose down -v`
 - Restart: `docker-compose down; docker-compose build; docker-compose up -d`
@@ -221,8 +229,3 @@ MariaDB:
 - Select database: `use jetstream;`
 - Show all tables: `show tables;`
 - Queries: `select * from wind_data;`
-
-## Screencast
-In the screencast all functionalities and features are shown: [Link to German screencast](https://youtu.be/FXiF89BOpgM)
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/FXiF89BOpgM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
