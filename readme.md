@@ -1,7 +1,9 @@
 # Jetstream - German Wind Data Collector
 
-> Laborarbeit Big Data Engineering WiSe 2024/2025  
+> Laborarbeit Big Data Engineering WiSe 2024/2025
 > Jannis Kaniaros (5934448) & Fabian Lohmüller (8175324)
+> 
+> [github.com/jkaniaros/jetstream](https://github.com/jkaniaros/jetstream)
 
 - [Jetstream - German Wind Data Collector](#jetstream---german-wind-data-collector)
   - [Idea](#idea)
@@ -63,7 +65,7 @@ In the Spark application, both Kafka topics described above are read as a stream
 1. First, the streams are converted into the correct format (conversion of the JSON byte array into CSV, then from CSV into usable columns).  
   Incorrect rows, e.g. null values in the station ID or wind speeds <= 0, are removed.
 2. Then, a Bucketizer is applied to the data in order to fit the data into bins according to their values. The wind direction is binned into buckets for each 45°:  
-    ```json
+    ```
     0: [0;45[
     1: [45;90[
     2: [90;135[
@@ -74,7 +76,7 @@ In the Spark application, both Kafka topics described above are read as a stream
     7: [315;360[
     ```  
     Similarly, the wind speed is binned - but into different buckets: low, medium, heavy and extreme wind:
-    ```json
+    ```
     0: [0;5[
     1: [5;10[
     2: [10;17[
