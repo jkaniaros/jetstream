@@ -205,10 +205,11 @@ The following data are displayed - reacting responsively to the time range and s
 | **Wind direction histogram** | Shows a histogram for the wind direction in the specified time range for all stations or the specified one |
 
 
-![Grafana Dasboard](img/grafana_dashboard.png)
+![Gr  afana Dasboard](img/grafana_dashboard.png)
 ![Grafana Dasboard Histogramme](img/grafana_dashboard_histograms.png)
 
-Of course, the data are changed live as soon as new data are available in the database. This happens approximately every 30 minutes because of the update cycle of the DWD.
+Of course, the data are changed in real-time as soon as new data are available in the database. This happens approximately every 30 minutes because of the update cycle of the DWD. 
+With more frequent updates by the DWD, the data could really be processed in *real-time*.
 
 <div style="page-break-after: always"></div>
 
